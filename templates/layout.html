@@ -101,7 +101,7 @@
             <h2>Chào Mừng Trở Lại</h2>
             <p>Đăng nhập để tiếp tục học tập</p>
         </div>
-        <form id="login-form" class="modal-form">
+        <form id="login-form" class="modal-form" method="POST" action="/login">
             <div class="form-group">
                 <label>Email</label>
                 <input type="email" name="email" placeholder="email@example.com" required>
@@ -128,7 +128,7 @@
             <h2>Tạo Tài Khoản</h2>
             <p>Tham gia cùng hàng nghìn học viên</p>
         </div>
-        <form id="register-form" class="modal-form">
+        <form id="register-form" class="modal-form" method="POST" action="/register">
             <div class="form-group">
                 <label>Họ và Tên</label>
                 <input type="text" name="name" placeholder="Nguyễn Văn A" required>

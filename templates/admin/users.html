@@ -7,7 +7,7 @@
   <form method="GET" class="toolbar-search">
     <input type="text" name="q" value="{{ q }}" placeholder="Tìm tên hoặc email...">
     <button type="submit">🔍</button>
-    {% if q %}<a href="{{ url_for('admin_users') }}" class="clear-search">✕</a>{% endif %}
+    {% if q %}<a href="/admin/users" class="clear-search">✕</a>{% endif %}
   </form>
   <span class="toolbar-info">Tổng: <strong>{{ total }}</strong> học viên</span>
 </div>

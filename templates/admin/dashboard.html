@@ -74,7 +74,7 @@
   <div class="dash-card">
     <div class="dash-card-header">
       <h3>Top Khóa Học</h3>
-      <a href="{{ url_for('admin_courses') }}" class="dash-card-link">Xem tất cả →</a>
+      <a href="/admin/courses" class="dash-card-link">Xem tất cả →</a>
     </div>
     <div class="top-courses-list">
       {% for c in top_courses %}
@@ -99,7 +99,7 @@
 <div class="dash-card" style="margin-top: 24px;">
   <div class="dash-card-header">
     <h3>Đăng Ký Gần Đây</h3>
-    <a href="{{ url_for('admin_users') }}" class="dash-card-link">Xem tất cả →</a>
+    <a href="/admin/users" class="dash-card-link">Xem tất cả →</a>
   </div>
   <div class="admin-table-wrap">
     <table class="admin-table">

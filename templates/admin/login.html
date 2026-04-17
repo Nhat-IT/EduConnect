@@ -6,7 +6,7 @@
   <title>Đăng Nhập Admin — EduConnect</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+  <link rel="stylesheet" href="/static/css/admin.css">
 </head>
 <body class="admin-body">
 
@@ -23,7 +23,7 @@
       {% endfor %}
     {% endif %}
 
-    <form method="POST" action="{{ url_for('admin_login') }}" class="alc-form">
+    <form method="POST" action="/admin/login" class="alc-form">
       <div class="alc-field">
         <label>Email Quản Trị</label>
         <input type="email" name="email" placeholder="admin@educonnect.vn" required autofocus>
@@ -42,7 +42,7 @@
       <p>Demo: <code>admin@educonnect.vn</code> / <code>admin123</code></p>
     </div>
 
-    <a href="{{ url_for('trang_chu') }}" class="alc-back">← Quay về trang chủ</a>
+    <a href="/" class="alc-back">← Quay về trang chủ</a>
   </div>
 </div>
 

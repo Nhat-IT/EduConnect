@@ -8,7 +8,7 @@
   <form method="GET" class="toolbar-search">
     <input type="text" name="q" value="{{ q }}" placeholder="Tìm tên khóa học...">
     <button type="submit">🔍</button>
-    {% if q %}<a href="{{ url_for('admin_courses') }}" class="clear-search">✕</a>{% endif %}
+    {% if q %}<a href="/admin/courses" class="clear-search">✕</a>{% endif %}
   </form>
   <button class="btn-admin-primary" onclick="openModal('modal-add-course')">+ Thêm Khóa Học</button>
 </div>

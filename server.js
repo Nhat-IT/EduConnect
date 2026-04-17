@@ -603,8 +603,10 @@ app.get('/khoa-hoc', async (req, res, next) => {
     const safePage = Math.min(page, totalPages);
     const offset = (safePage - 1) * perPage;
 
-    const courseParams = [...filterParams, perPage, offset];
-    const courses = await queryAll(`${baseQuery} LIMIT ? OFFSET ?`, courseParams);
+    const courses = await queryAll(
+  `${baseQuery} LIMIT ${perPage} OFFSET ${offset}`,
+  filterParams
+);
     const categories = await queryAll('SELECT * FROM categories');
 
     const normalizedCourses = courses.map((course) => ({

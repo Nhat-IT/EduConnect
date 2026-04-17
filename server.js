@@ -13,6 +13,13 @@ const app = express();
 const upload = multer();
 
 const PORT = Number(process.env.PORT || 3000);
+const NODE_ENV = process.env.NODE_ENV || 'development';
+
+const rawTrustProxy = process.env.TRUST_PROXY;
+if (rawTrustProxy && rawTrustProxy !== 'false') {
+  const parsed = Number(rawTrustProxy);
+  app.set('trust proxy', Number.isNaN(parsed) ? rawTrustProxy : parsed);
+}
 
 const routeMap = {
   trang_chu: '/',
@@ -183,10 +190,16 @@ app.use(
     secret: process.env.SESSION_SECRET || 'change_this_session_secret',
     resave: false,
     saveUninitialized: false,
+    proxy: Boolean(rawTrustProxy && rawTrustProxy !== 'false'),
     cookie: {
       maxAge: Number(process.env.SESSION_MAX_AGE || 1000 * 60 * 60 * 24 * 7),
       httpOnly: true,
-      secure: process.env.COOKIE_SECURE === 'true',
+      secure:
+        process.env.COOKIE_SECURE === 'true'
+          ? true
+          : process.env.COOKIE_SECURE === 'false'
+            ? false
+            : 'auto',
       sameSite: process.env.COOKIE_SAMESITE || 'lax'
     }
   })
@@ -598,6 +611,10 @@ app.use((err, req, res, next) => {
 
 (async () => {
   try {
+    if (NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
+      throw new Error('Missing SESSION_SECRET in production environment');
+    }
+
     pool = mysql.createPool(getMySqlConfig());
     await testDatabaseConnection();
 

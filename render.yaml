@@ -10,7 +10,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: PREVIEW_MODE
-        value: "true"
+        value: "false"
       - key: TRUST_PROXY
         value: "1"
       - key: COOKIE_SECURE

@@ -1,6 +1,8 @@
 -- Shared hosting often does not allow CREATE DATABASE.
 -- Use the database already provisioned by your hosting provider.
-USE bdlcbhmcoacr3f66ltng;
+-- IMPORTANT:
+-- 1) Select your target database in phpMyAdmin/MySQL client first.
+-- 2) Ensure DB_NAME in .env matches that selected database.
 
 CREATE TABLE IF NOT EXISTS users (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

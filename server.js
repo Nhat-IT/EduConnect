@@ -15,13 +15,8 @@ const upload = multer();
 const PORT = Number(process.env.PORT || 3000);
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const hasRequiredDbEnv = Boolean(process.env.DB_HOST && process.env.DB_USER && process.env.DB_NAME);
-const previewModeEnv = process.env.PREVIEW_MODE;
-const PREVIEW_MODE =
-  previewModeEnv === 'true'
-    ? true
-    : previewModeEnv === 'false'
-      ? false
-      : !hasRequiredDbEnv;
+// Force real database mode for all environments.
+const PREVIEW_MODE = false;
 
 const rawTrustProxy = process.env.TRUST_PROXY;
 if (rawTrustProxy && rawTrustProxy !== 'false') {
@@ -2193,6 +2188,10 @@ app.use((err, req, res, next) => {
   try {
     if (NODE_ENV === 'production' && !process.env.SESSION_SECRET && !PREVIEW_MODE) {
       throw new Error('Missing SESSION_SECRET in production environment');
+    }
+
+    if (!hasRequiredDbEnv) {
+      throw new Error('Missing DB_HOST, DB_USER or DB_NAME in environment. Preview mode is disabled.');
     }
 
     if (PREVIEW_MODE) {

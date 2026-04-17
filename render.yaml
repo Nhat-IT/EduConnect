@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: edu-connect
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PREVIEW_MODE
+        value: "true"
+      - key: TRUST_PROXY
+        value: "1"
+      - key: COOKIE_SECURE
+        value: auto
+      - key: COOKIE_SAMESITE
+        value: lax

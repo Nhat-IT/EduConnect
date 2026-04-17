@@ -14,7 +14,14 @@ const upload = multer();
 
 const PORT = Number(process.env.PORT || 3000);
 const NODE_ENV = process.env.NODE_ENV || 'development';
-const PREVIEW_MODE = process.env.PREVIEW_MODE === 'true';
+const hasRequiredDbEnv = Boolean(process.env.DB_HOST && process.env.DB_USER && process.env.DB_NAME);
+const previewModeEnv = process.env.PREVIEW_MODE;
+const PREVIEW_MODE =
+  previewModeEnv === 'true'
+    ? true
+    : previewModeEnv === 'false'
+      ? false
+      : !hasRequiredDbEnv;
 
 const rawTrustProxy = process.env.TRUST_PROXY;
 if (rawTrustProxy && rawTrustProxy !== 'false') {
@@ -878,11 +885,14 @@ app.use((err, req, res, next) => {
 
 (async () => {
   try {
-    if (NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
+    if (NODE_ENV === 'production' && !process.env.SESSION_SECRET && !PREVIEW_MODE) {
       throw new Error('Missing SESSION_SECRET in production environment');
     }
 
     if (PREVIEW_MODE) {
+      if (!hasRequiredDbEnv) {
+        console.warn('DB env is missing, server is running in PREVIEW_MODE.');
+      }
       app.listen(PORT, () => {
         console.log(`EduConnect preview mode at http://127.0.0.1:${PORT}`);
       });

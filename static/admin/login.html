@@ -58,7 +58,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
   const data = await res.json();
   
   if (data.success) {
-    window.location.href = '/admin/dashboard.html';
+    window.location.href = '/static/admin/dashboard.html';
   } else {
     const alertDiv = document.getElementById('alert-container');
     alertDiv.innerHTML = `<div class="alc-alert alc-alert-error">${data.message || 'Đăng nhập thất bại'}</div>`;

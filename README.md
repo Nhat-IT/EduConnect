@@ -6,7 +6,7 @@ Backend hiện tại chạy bằng Node.js + Express và sử dụng MySQL.
 
 1. Source backend: [server.js](server.js)
 2. Mẫu biến môi trường: [.env.example](.env.example)
-3. Script tạo DB + seed dữ liệu: [database.mysql.sql](database.mysql.sql)
+3. Script tạo DB + seed dữ liệu: [database.mysql.sql](database.mysql.sql).
 
 ## Yêu cầu trên host
 

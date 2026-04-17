@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EduConnect – Học Nhanh, Thành Công Sớm{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    {% block extra_css %}{% endblock %}
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="site-header" id="site-header">
+    <div class="container header-inner">
+        <a href="{{ url_for('trang_chu') }}" class="logo">
+            <span class="logo-icon">🎓</span>
+            <span class="logo-text">Edu<strong>Connect</strong></span>
+        </a>
+
+        <nav class="main-nav" id="main-nav">
+            <a href="{{ url_for('trang_chu') }}" class="nav-link {% if request.endpoint == 'trang_chu' %}active{% endif %}">Trang Chủ</a>
+            <a href="{{ url_for('tat_ca_khoa_hoc') }}" class="nav-link {% if request.endpoint == 'tat_ca_khoa_hoc' %}active{% endif %}">Khóa Học</a>
+            <a href="{{ url_for('gioi_thieu') }}" class="nav-link {% if request.endpoint == 'gioi_thieu' %}active{% endif %}">Giới Thiệu</a>
+            <a href="{{ url_for('lien_he') }}" class="nav-link {% if request.endpoint == 'lien_he' %}active{% endif %}">Liên Hệ</a>
+        </nav>
+
+        <div class="header-actions">
+            {% if current_user %}
+                <a href="{{ url_for('tai_khoan') }}" class="btn-account">
+                    <span class="avatar-circle">{{ current_user.name[0] }}</span>
+                    <span>{{ current_user.name }}</span>
+                </a>
+                <a href="{{ url_for('logout') }}" class="btn-outline-sm">Đăng Xuất</a>
+            {% else %}
+                <button class="btn-outline-sm" onclick="openModal('login-modal')">Đăng Nhập</button>
+                <button class="btn-primary-sm" onclick="openModal('register-modal')">Đăng Ký</button>
+            {% endif %}
+        </div>
+
+        <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </button>
+    </div>
+</header>
+
+<!-- ── MAIN CONTENT ── -->
+<main>{% block content %}{% endblock %}</main>
+
+<!-- ── FOOTER ── -->
+<footer class="site-footer">
+    <div class="container footer-grid">
+        <div class="footer-brand">
+            <a href="{{ url_for('trang_chu') }}" class="logo logo-light">
+                <span class="logo-icon">🎓</span>
+                <span class="logo-text">Edu<strong>Connect</strong></span>
+            </a>
+            <p>Nền tảng học tập trực tuyến hàng đầu Việt Nam. Học nhanh – kiếm tiền sớm.</p>
+            <div class="social-links">
+                <a href="#" aria-label="Facebook">f</a>
+                <a href="#" aria-label="YouTube">▶</a>
+                <a href="#" aria-label="TikTok">♪</a>
+            </div>
+        </div>
+        <div class="footer-col">
+            <h4>Khóa Học</h4>
+            <a href="{{ url_for('tat_ca_khoa_hoc') }}?category=lap-trinh-web">Lập Trình Web</a>
+            <a href="{{ url_for('tat_ca_khoa_hoc') }}?category=digital-marketing">Digital Marketing</a>
+            <a href="{{ url_for('tat_ca_khoa_hoc') }}?category=seo">SEO</a>
+            <a href="{{ url_for('tat_ca_khoa_hoc') }}?category=thiet-ke">Thiết Kế</a>
+        </div>
+        <div class="footer-col">
+            <h4>Liên Kết</h4>
+            <a href="{{ url_for('gioi_thieu') }}">Giới Thiệu</a>
+            <a href="{{ url_for('lien_he') }}">Liên Hệ</a>
+            <a href="#">Chính Sách Bảo Mật</a>
+            <a href="#">Điều Khoản Dịch Vụ</a>
+        </div>
+        <div class="footer-col">
+            <h4>Liên Hệ</h4>
+            <p>📍 TP. Hồ Chí Minh, Việt Nam</p>
+            <p>📞 0909 999 888</p>
+            <p>✉️ hello@educonnect.vn</p>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <div class="container">
+            <p>© 2024 EduConnect. Bảo lưu mọi quyền.</p>
+        </div>
+    </div>
+</footer>
+
+<!-- ── MODAL ĐĂNG NHẬP ── -->
+<div class="modal-overlay" id="login-modal" onclick="closeModalOverlay(event, 'login-modal')">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal('login-modal')">✕</button>
+        <div class="modal-header">
+            <h2>Chào Mừng Trở Lại</h2>
+            <p>Đăng nhập để tiếp tục học tập</p>
+        </div>
+        <form id="login-form" class="modal-form">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" placeholder="email@example.com" required>
+            </div>
+            <div class="form-group">
+                <label>Mật Khẩu</label>
+                <input type="password" name="password" placeholder="••••••••" required>
+            </div>
+            <div class="form-footer">
+                <a href="{{ url_for('quen_mat_khau') }}">Quên mật khẩu?</a>
+            </div>
+            <div id="login-msg" class="form-message"></div>
+            <button type="submit" class="btn-primary full-width">Đăng Nhập</button>
+        </form>
+        <p class="modal-switch">Chưa có tài khoản? <a href="#" onclick="switchModal('login-modal','register-modal')">Đăng ký ngay</a></p>
+    </div>
+</div>
+
+<!-- ── MODAL ĐĂNG KÝ ── -->
+<div class="modal-overlay" id="register-modal" onclick="closeModalOverlay(event, 'register-modal')">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal('register-modal')">✕</button>
+        <div class="modal-header">
+            <h2>Tạo Tài Khoản</h2>
+            <p>Tham gia cùng hàng nghìn học viên</p>
+        </div>
+        <form id="register-form" class="modal-form">
+            <div class="form-group">
+                <label>Họ và Tên</label>
+                <input type="text" name="name" placeholder="Nguyễn Văn A" required>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" placeholder="email@example.com" required>
+            </div>
+            <div class="form-group">
+                <label>Mật Khẩu</label>
+                <input type="password" name="password" placeholder="Tối thiểu 6 ký tự" required minlength="6">
+            </div>
+            <div id="register-msg" class="form-message"></div>
+            <button type="submit" class="btn-primary full-width">Đăng Ký Miễn Phí</button>
+        </form>
+        <p class="modal-switch">Đã có tài khoản? <a href="#" onclick="switchModal('register-modal','login-modal')">Đăng nhập</a></p>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -36,7 +36,14 @@ const routeMap = {
   lien_he: '/lien-he',
   quen_mat_khau: '/quen-mat-khau',
   tai_khoan: '/tai-khoan',
-  logout: '/logout'
+  logout: '/logout',
+  admin_login: '/admin/login',
+  admin_dashboard: '/admin/dashboard',
+  admin_courses: '/admin/courses',
+  admin_users: '/admin/users',
+  admin_categories: '/admin/categories',
+  admin_contacts: '/admin/contacts',
+  admin_logout: '/admin/logout'
 };
 
 let pool;
@@ -116,6 +123,38 @@ const previewReviews = [
   { id: 3, user_name: 'Phạm Quốc Huy', rating: 5, comment: 'Nội dung chất lượng, hỗ trợ tốt.' }
 ];
 
+const previewUsers = [
+  ...previewInstructors,
+  { id: 4, name: 'Ngô Hải Yến', email: 'yen.ngo@educonnect.vn', created_at: '2024-02-02 09:10:00' },
+  { id: 5, name: 'Đỗ Minh Đức', email: 'duc.do@educonnect.vn', created_at: '2024-02-14 11:40:00' }
+];
+
+const previewEnrollments = [
+  { id: 1, user_id: 4, course_id: 1, enrolled_at: '2024-03-05 09:00:00', progress: 40 },
+  { id: 2, user_id: 4, course_id: 2, enrolled_at: '2024-03-08 12:30:00', progress: 15 },
+  { id: 3, user_id: 5, course_id: 3, enrolled_at: '2024-03-16 17:20:00', progress: 55 }
+];
+
+const previewContacts = [
+  {
+    id: 1,
+    name: 'Nguyễn Hữu Khang',
+    email: 'khang.nguyen@gmail.com',
+    message: 'Mình cần tư vấn khóa SEO cho người mới bắt đầu.',
+    created_at: '2024-03-18 08:45:00'
+  },
+  {
+    id: 2,
+    name: 'Lê Trang',
+    email: 'trang.le@gmail.com',
+    message: 'Website học có hỗ trợ học trên điện thoại không?',
+    created_at: '2024-03-22 15:05:00'
+  }
+];
+
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@educonnect.vn';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+
 function toNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
@@ -168,6 +207,67 @@ function buildPageItems(currentPage, totalPages) {
     });
 
   return items;
+}
+
+function slugify(value) {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/-{2,}/g, '-');
+}
+
+function paginateList(list, page = 1, perPage = 10) {
+  const total = list.length;
+  const totalPages = Math.max(Math.ceil(total / perPage), 1);
+  const safePage = Math.min(Math.max(page, 1), totalPages);
+  const start = (safePage - 1) * perPage;
+  return {
+    items: list.slice(start, start + perPage),
+    total,
+    page: safePage,
+    totalPages
+  };
+}
+
+function pushAdminFlash(req, type, message) {
+  req.session.admin_flash_messages = req.session.admin_flash_messages || [];
+  req.session.admin_flash_messages.push([type, message]);
+}
+
+function popAdminFlash(req) {
+  const messages = req.session.admin_flash_messages || [];
+  delete req.session.admin_flash_messages;
+  return messages;
+}
+
+function ensureAdmin(req, res, next) {
+  if (!req.session.admin_user) {
+    return res.redirect('/admin/login');
+  }
+  return next();
+}
+
+async function getContactCount() {
+  if (PREVIEW_MODE) {
+    return previewContacts.length;
+  }
+  const row = await queryOne('SELECT COUNT(*) AS total FROM contacts');
+  return toNumber(row?.total);
+}
+
+async function adminRenderData(req, endpoint, extra = {}) {
+  const adminUserName = req.session.admin_user?.name || 'Admin';
+  const contactCount = await getContactCount();
+  return baseRenderData(endpoint, {
+    admin_user_name: adminUserName,
+    flash_messages: popAdminFlash(req),
+    contact_count: contactCount,
+    ...extra
+  });
 }
 
 async function queryOne(sql, params = []) {
@@ -257,9 +357,11 @@ viewEnv.addGlobal('range', (start, end) => {
 });
 viewEnv.addFilter('number', (value) => formatNumber(value));
 viewEnv.addFilter('currency', (value) => formatCurrency(value));
+viewEnv.addFilter('slice_text', (value, start, end) => String(value || '').slice(toNumber(start), toNumber(end)));
 
 app.use('/static', express.static(path.join(__dirname, 'static')));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
   if (req.method === 'POST') {
     upload.none()(req, res, next);
@@ -861,6 +963,767 @@ app.post('/enroll/:courseId', loginRequired, async (req, res, next) => {
     await queryExec('UPDATE courses SET total_students = total_students + 1 WHERE id = ?', [courseId]);
 
     return res.json({ success: true, message: 'Đăng ký thành công!' });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get('/admin', (req, res) => {
+  if (!req.session.admin_user) {
+    return res.redirect('/admin/login');
+  }
+  return res.redirect('/admin/dashboard');
+});
+
+app.get('/admin/login', async (req, res, next) => {
+  try {
+    if (req.session.admin_user) {
+      return res.redirect('/admin/dashboard');
+    }
+    return res.render('admin/login.html', await adminRenderData(req, 'admin_login'));
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post('/admin/login', (req, res) => {
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const password = String(req.body.password || '');
+
+  if (email !== ADMIN_EMAIL.toLowerCase() || password !== ADMIN_PASSWORD) {
+    pushAdminFlash(req, 'error', 'Email hoặc mật khẩu admin không đúng.');
+    return res.redirect('/admin/login');
+  }
+
+  req.session.admin_user = {
+    name: 'Admin',
+    email: ADMIN_EMAIL
+  };
+  return res.redirect('/admin/dashboard');
+});
+
+app.get('/admin/logout', (req, res) => {
+  delete req.session.admin_user;
+  return res.redirect('/admin/login');
+});
+
+app.get('/admin/dashboard', ensureAdmin, async (req, res, next) => {
+  try {
+    if (PREVIEW_MODE) {
+      const monthlyMap = new Map();
+      previewEnrollments.forEach((e) => {
+        const month = String(e.enrolled_at || '').slice(0, 7);
+        monthlyMap.set(month, (monthlyMap.get(month) || 0) + 1);
+      });
+
+      const monthly = Array.from(monthlyMap.entries())
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([month, count]) => ({
+          month,
+          count,
+          month_label: `${String(month).slice(5, 7)}/${String(month).slice(2, 4)}`
+        }));
+      const maxMonthCount = Math.max(1, ...monthly.map((row) => toNumber(row.count)));
+
+      const topCourses = previewCourses
+        .slice()
+        .sort((a, b) => toNumber(b.total_students) - toNumber(a.total_students))
+        .slice(0, 5);
+
+      const recentEnrolls = previewEnrollments
+        .slice()
+        .sort((a, b) => String(b.enrolled_at).localeCompare(String(a.enrolled_at)))
+        .slice(0, 10)
+        .map((e) => {
+          const user = previewUsers.find((u) => u.id === e.user_id) || {};
+          const course = previewCourses.find((c) => c.id === e.course_id) || {};
+          return {
+            ...e,
+            user_name: user.name || '—',
+            user_email: user.email || '—',
+            course_title: course.title || '—',
+            price: toNumber(course.price)
+          };
+        });
+
+      const stats = {
+        total_users: previewUsers.length,
+        new_users_week: 2,
+        total_courses: previewCourses.length,
+        total_enrolls: previewEnrollments.length,
+        total_revenue: previewEnrollments.reduce((sum, e) => {
+          const course = previewCourses.find((c) => c.id === e.course_id);
+          return sum + toNumber(course?.price);
+        }, 0)
+      };
+
+      return res.render(
+        'admin/dashboard.html',
+        await adminRenderData(req, 'admin_dashboard', {
+          stats,
+          monthly,
+          max_month_count: maxMonthCount,
+          top_courses: topCourses,
+          recent_enrolls: recentEnrolls
+        })
+      );
+    }
+
+    const [usersCount, coursesCount, enrollCount, revenueRow, topCourses, recentEnrolls, monthlyRows] = await Promise.all([
+      queryOne('SELECT COUNT(*) AS total FROM users'),
+      queryOne('SELECT COUNT(*) AS total FROM courses'),
+      queryOne('SELECT COUNT(*) AS total FROM enrollments'),
+      queryOne('SELECT COALESCE(SUM(c.price), 0) AS total FROM enrollments e JOIN courses c ON c.id = e.course_id'),
+      queryAll(
+        `SELECT c.*, cat.name AS category_name, u.name AS instructor_name
+         FROM courses c
+         LEFT JOIN categories cat ON cat.id = c.category_id
+         LEFT JOIN users u ON u.id = c.instructor_id
+         ORDER BY c.total_students DESC, c.id DESC
+         LIMIT 5`
+      ),
+      queryAll(
+        `SELECT e.id, e.enrolled_at, u.name AS user_name, u.email AS user_email, c.title AS course_title, c.price
+         FROM enrollments e
+         JOIN users u ON u.id = e.user_id
+         JOIN courses c ON c.id = e.course_id
+         ORDER BY e.enrolled_at DESC, e.id DESC
+         LIMIT 10`
+      ),
+      queryAll(
+        `SELECT DATE_FORMAT(enrolled_at, '%Y-%m') AS month, COUNT(*) AS count
+         FROM enrollments
+         GROUP BY DATE_FORMAT(enrolled_at, '%Y-%m')
+         ORDER BY month ASC
+         LIMIT 12`
+      )
+    ]);
+
+    const monthly = monthlyRows.map((row) => ({
+      ...row,
+      month_label: `${String(row.month).slice(5, 7)}/${String(row.month).slice(2, 4)}`
+    }));
+
+    const stats = {
+      total_users: toNumber(usersCount?.total),
+      new_users_week: 0,
+      total_courses: toNumber(coursesCount?.total),
+      total_enrolls: toNumber(enrollCount?.total),
+      total_revenue: toNumber(revenueRow?.total)
+    };
+    const maxMonthCount = Math.max(1, ...monthly.map((row) => toNumber(row.count)));
+
+    return res.render(
+      'admin/dashboard.html',
+      await adminRenderData(req, 'admin_dashboard', {
+        stats,
+        monthly,
+        max_month_count: maxMonthCount,
+        top_courses: topCourses,
+        recent_enrolls: recentEnrolls
+      })
+    );
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get('/admin/users', ensureAdmin, async (req, res, next) => {
+  try {
+    const q = String(req.query.q || '').trim().toLowerCase();
+    const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+    const perPage = 10;
+
+    if (PREVIEW_MODE) {
+      const enriched = previewUsers.map((u) => ({
+        ...u,
+        enroll_count: previewEnrollments.filter((e) => e.user_id === u.id).length
+      }));
+
+      const filtered = q
+        ? enriched.filter((u) => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q))
+        : enriched;
+
+      const pager = paginateList(filtered, page, perPage);
+      return res.render(
+        'admin/users.html',
+        await adminRenderData(req, 'admin_users', {
+          users: pager.items,
+          total: pager.total,
+          page: pager.page,
+          total_pages: pager.totalPages,
+          q
+        })
+      );
+    }
+
+    let whereSql = '';
+    const params = [];
+    if (q) {
+      whereSql = ' WHERE LOWER(u.name) LIKE ? OR LOWER(u.email) LIKE ? ';
+      params.push(`%${q}%`, `%${q}%`);
+    }
+
+    const totalRow = await queryOne(`SELECT COUNT(*) AS total FROM users u ${whereSql}`, params);
+    const total = toNumber(totalRow?.total);
+    const totalPages = Math.max(Math.ceil(total / perPage), 1);
+    const safePage = Math.min(page, totalPages);
+    const offset = (safePage - 1) * perPage;
+
+    const users = await queryAll(
+      `SELECT u.*, COUNT(e.id) AS enroll_count
+       FROM users u
+       LEFT JOIN enrollments e ON e.user_id = u.id
+       ${whereSql}
+       GROUP BY u.id
+       ORDER BY u.id DESC
+       LIMIT ? OFFSET ?`,
+      [...params, perPage, offset]
+    );
+
+    return res.render(
+      'admin/users.html',
+      await adminRenderData(req, 'admin_users', {
+        users,
+        total,
+        page: safePage,
+        total_pages: totalPages,
+        q
+      })
+    );
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get('/admin/users/get/:id', ensureAdmin, async (req, res, next) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isInteger(id)) {
+      return res.status(400).json({ success: false, message: 'ID không hợp lệ.' });
+    }
+
+    if (PREVIEW_MODE) {
+      const user = previewUsers.find((u) => u.id === id);
+      if (!user) {
+        return res.status(404).json({ success: false, message: 'Không tìm thấy học viên.' });
+      }
+      const enrollments = previewEnrollments
+        .filter((e) => e.user_id === id)
+        .map((e) => ({ ...e, title: previewCourses.find((c) => c.id === e.course_id)?.title || '—' }));
+      return res.json({ success: true, user, enrollments });
+    }
+
+    const user = await queryOne('SELECT * FROM users WHERE id = ?', [id]);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy học viên.' });
+    }
+
+    const enrollments = await queryAll(
+      `SELECT e.*, c.title
+       FROM enrollments e
+       JOIN courses c ON c.id = e.course_id
+       WHERE e.user_id = ?
+       ORDER BY e.enrolled_at DESC, e.id DESC`,
+      [id]
+    );
+
+    return res.json({ success: true, user, enrollments });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post('/admin/users/delete/:id', ensureAdmin, async (req, res, next) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isInteger(id)) {
+      return res.status(400).json({ success: false, message: 'ID không hợp lệ.' });
+    }
+
+    if (PREVIEW_MODE) {
+      const userIdx = previewUsers.findIndex((u) => u.id === id);
+      if (userIdx === -1) {
+        return res.status(404).json({ success: false, message: 'Không tìm thấy học viên.' });
+      }
+      previewUsers.splice(userIdx, 1);
+      for (let i = previewEnrollments.length - 1; i >= 0; i -= 1) {
+        if (previewEnrollments[i].user_id === id) previewEnrollments.splice(i, 1);
+      }
+      return res.json({ success: true, message: 'Đã xóa học viên.' });
+    }
+
+    const result = await queryExec('DELETE FROM users WHERE id = ?', [id]);
+    if (toNumber(result.affectedRows) < 1) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy học viên.' });
+    }
+    return res.json({ success: true, message: 'Đã xóa học viên.' });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get('/admin/categories', ensureAdmin, async (req, res, next) => {
+  try {
+    if (PREVIEW_MODE) {
+      const categories = previewCategories.map((cat) => ({
+        ...cat,
+        course_count: previewCourses.filter((c) => c.category_id === cat.id).length
+      }));
+      return res.render('admin/categories.html', await adminRenderData(req, 'admin_categories', { categories }));
+    }
+
+    const categories = await queryAll(
+      `SELECT cat.*, COUNT(c.id) AS course_count
+       FROM categories cat
+       LEFT JOIN courses c ON c.category_id = cat.id
+       GROUP BY cat.id
+       ORDER BY cat.id DESC`
+    );
+
+    return res.render('admin/categories.html', await adminRenderData(req, 'admin_categories', { categories }));
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post('/admin/categories/add', ensureAdmin, async (req, res, next) => {
+  try {
+    const name = String(req.body.name || '').trim();
+    if (!name) {
+      return res.json({ success: false, message: 'Vui lòng nhập tên danh mục.' });
+    }
+
+    if (PREVIEW_MODE) {
+      const slugBase = slugify(name) || `danh-muc-${Date.now()}`;
+      let slug = slugBase;
+      let idx = 1;
+      while (previewCategories.some((cat) => cat.slug === slug)) {
+        idx += 1;
+        slug = `${slugBase}-${idx}`;
+      }
+      const id = Math.max(0, ...previewCategories.map((c) => c.id)) + 1;
+      previewCategories.push({ id, name, slug });
+      return res.json({ success: true, message: 'Đã thêm danh mục.' });
+    }
+
+    const slugBase = slugify(name) || `danh-muc-${Date.now()}`;
+    let slug = slugBase;
+    let idx = 1;
+    while (await queryOne('SELECT id FROM categories WHERE slug = ?', [slug])) {
+      idx += 1;
+      slug = `${slugBase}-${idx}`;
+    }
+
+    await queryExec('INSERT INTO categories (name, slug) VALUES (?, ?)', [name, slug]);
+    return res.json({ success: true, message: 'Đã thêm danh mục.' });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post('/admin/categories/edit/:id', ensureAdmin, async (req, res, next) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const name = String(req.body.name || '').trim();
+    if (!Number.isInteger(id) || !name) {
+      return res.json({ success: false, message: 'Dữ liệu không hợp lệ.' });
+    }
+
+    if (PREVIEW_MODE) {
+      const category = previewCategories.find((cat) => cat.id === id);
+      if (!category) return res.json({ success: false, message: 'Không tìm thấy danh mục.' });
+      category.name = name;
+      category.slug = slugify(name) || category.slug;
+      return res.json({ success: true, message: 'Đã cập nhật danh mục.' });
+    }
+
+    const category = await queryOne('SELECT * FROM categories WHERE id = ?', [id]);
+    if (!category) return res.json({ success: false, message: 'Không tìm thấy danh mục.' });
+
+    const slugBase = slugify(name) || category.slug;
+    let slug = slugBase;
+    let idx = 1;
+    while (await queryOne('SELECT id FROM categories WHERE slug = ? AND id <> ?', [slug, id])) {
+      idx += 1;
+      slug = `${slugBase}-${idx}`;
+    }
+
+    await queryExec('UPDATE categories SET name = ?, slug = ? WHERE id = ?', [name, slug, id]);
+    return res.json({ success: true, message: 'Đã cập nhật danh mục.' });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post('/admin/categories/delete/:id', ensureAdmin, async (req, res, next) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isInteger(id)) {
+      return res.json({ success: false, message: 'ID không hợp lệ.' });
+    }
+
+    if (PREVIEW_MODE) {
+      if (previewCourses.some((c) => c.category_id === id)) {
+        return res.json({ success: false, message: 'Danh mục đang có khóa học, không thể xóa.' });
+      }
+      const idx = previewCategories.findIndex((cat) => cat.id === id);
+      if (idx === -1) return res.json({ success: false, message: 'Không tìm thấy danh mục.' });
+      previewCategories.splice(idx, 1);
+      return res.json({ success: true, message: 'Đã xóa danh mục.' });
+    }
+
+    const hasCourse = await queryOne('SELECT id FROM courses WHERE category_id = ? LIMIT 1', [id]);
+    if (hasCourse) {
+      return res.json({ success: false, message: 'Danh mục đang có khóa học, không thể xóa.' });
+    }
+
+    const result = await queryExec('DELETE FROM categories WHERE id = ?', [id]);
+    if (toNumber(result.affectedRows) < 1) {
+      return res.json({ success: false, message: 'Không tìm thấy danh mục.' });
+    }
+
+    return res.json({ success: true, message: 'Đã xóa danh mục.' });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get('/admin/courses', ensureAdmin, async (req, res, next) => {
+  try {
+    const q = String(req.query.q || '').trim().toLowerCase();
+    const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+    const perPage = 10;
+
+    if (PREVIEW_MODE) {
+      const filtered = q
+        ? previewCourses.filter((c) => c.title.toLowerCase().includes(q))
+        : previewCourses.slice();
+      const pager = paginateList(filtered, page, perPage);
+      return res.render(
+        'admin/courses.html',
+        await adminRenderData(req, 'admin_courses', {
+          courses: pager.items,
+          total: pager.total,
+          page: pager.page,
+          total_pages: pager.totalPages,
+          q,
+          categories: previewCategories,
+          instructors: previewInstructors
+        })
+      );
+    }
+
+    let where = '';
+    const params = [];
+    if (q) {
+      where = ' WHERE LOWER(c.title) LIKE ? ';
+      params.push(`%${q}%`);
+    }
+
+    const totalRow = await queryOne(`SELECT COUNT(*) AS total FROM courses c ${where}`, params);
+    const total = toNumber(totalRow?.total);
+    const totalPages = Math.max(Math.ceil(total / perPage), 1);
+    const safePage = Math.min(page, totalPages);
+    const offset = (safePage - 1) * perPage;
+
+    const courses = await queryAll(
+      `SELECT c.*, cat.name AS category_name, u.name AS instructor_name
+       FROM courses c
+       LEFT JOIN categories cat ON cat.id = c.category_id
+       LEFT JOIN users u ON u.id = c.instructor_id
+       ${where}
+       ORDER BY c.id DESC
+       LIMIT ? OFFSET ?`,
+      [...params, perPage, offset]
+    );
+
+    const [categories, instructors] = await Promise.all([
+      queryAll('SELECT * FROM categories ORDER BY name ASC'),
+      queryAll('SELECT id, name FROM users ORDER BY name ASC')
+    ]);
+
+    return res.render(
+      'admin/courses.html',
+      await adminRenderData(req, 'admin_courses', {
+        courses,
+        total,
+        page: safePage,
+        total_pages: totalPages,
+        q,
+        categories,
+        instructors
+      })
+    );
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get('/admin/courses/get/:id', ensureAdmin, async (req, res, next) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isInteger(id)) return res.status(400).json({ success: false, message: 'ID không hợp lệ.' });
+
+    if (PREVIEW_MODE) {
+      const course = previewCourses.find((c) => c.id === id);
+      if (!course) return res.status(404).json({ success: false, message: 'Không tìm thấy khóa học.' });
+      return res.json(course);
+    }
+
+    const course = await queryOne('SELECT * FROM courses WHERE id = ?', [id]);
+    if (!course) return res.status(404).json({ success: false, message: 'Không tìm thấy khóa học.' });
+    return res.json(course);
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post('/admin/courses/add', ensureAdmin, async (req, res, next) => {
+  try {
+    const title = String(req.body.title || '').trim();
+    if (!title) {
+      return res.json({ success: false, message: 'Vui lòng nhập tên khóa học.' });
+    }
+
+    const payload = {
+      title,
+      description: String(req.body.description || '').trim(),
+      price: toNumber(req.body.price),
+      original_price: toNumber(req.body.original_price),
+      instructor_id: req.body.instructor_id ? toNumber(req.body.instructor_id) : null,
+      category_id: req.body.category_id ? toNumber(req.body.category_id) : null,
+      level: String(req.body.level || 'beginner'),
+      duration: String(req.body.duration || '0 giờ').trim(),
+      total_lessons: toNumber(req.body.total_lessons),
+      is_featured: toNumber(req.body.is_featured) ? 1 : 0
+    };
+
+    if (PREVIEW_MODE) {
+      const slugBase = slugify(title) || `khoa-hoc-${Date.now()}`;
+      let slug = slugBase;
+      let idx = 1;
+      while (previewCourses.some((c) => c.slug === slug)) {
+        idx += 1;
+        slug = `${slugBase}-${idx}`;
+      }
+
+      const newId = Math.max(0, ...previewCourses.map((c) => c.id)) + 1;
+      const instructor = previewInstructors.find((i) => i.id === payload.instructor_id);
+      const category = previewCategories.find((c) => c.id === payload.category_id);
+
+      previewCourses.push({
+        id: newId,
+        slug,
+        rating: 0,
+        total_students: 0,
+        image: null,
+        instructor_name: instructor?.name || '—',
+        category_name: category?.name || '—',
+        ...payload
+      });
+      return res.json({ success: true, message: 'Đã thêm khóa học.' });
+    }
+
+    const slugBase = slugify(title) || `khoa-hoc-${Date.now()}`;
+    let slug = slugBase;
+    let idx = 1;
+    while (await queryOne('SELECT id FROM courses WHERE slug = ?', [slug])) {
+      idx += 1;
+      slug = `${slugBase}-${idx}`;
+    }
+
+    await queryExec(
+      `INSERT INTO courses
+      (title, slug, description, price, original_price, instructor_id, category_id, level, duration, total_lessons, is_featured)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        payload.title,
+        slug,
+        payload.description,
+        payload.price,
+        payload.original_price,
+        payload.instructor_id,
+        payload.category_id,
+        payload.level,
+        payload.duration,
+        payload.total_lessons,
+        payload.is_featured
+      ]
+    );
+
+    return res.json({ success: true, message: 'Đã thêm khóa học.' });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post('/admin/courses/edit/:id', ensureAdmin, async (req, res, next) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isInteger(id)) {
+      return res.json({ success: false, message: 'ID không hợp lệ.' });
+    }
+
+    const title = String(req.body.title || '').trim();
+    if (!title) {
+      return res.json({ success: false, message: 'Vui lòng nhập tên khóa học.' });
+    }
+
+    const payload = {
+      title,
+      description: String(req.body.description || '').trim(),
+      price: toNumber(req.body.price),
+      original_price: toNumber(req.body.original_price),
+      instructor_id: req.body.instructor_id ? toNumber(req.body.instructor_id) : null,
+      category_id: req.body.category_id ? toNumber(req.body.category_id) : null,
+      level: String(req.body.level || 'beginner'),
+      duration: String(req.body.duration || '0 giờ').trim(),
+      total_lessons: toNumber(req.body.total_lessons),
+      is_featured: toNumber(req.body.is_featured) ? 1 : 0
+    };
+
+    if (PREVIEW_MODE) {
+      const course = previewCourses.find((c) => c.id === id);
+      if (!course) return res.json({ success: false, message: 'Không tìm thấy khóa học.' });
+      const instructor = previewInstructors.find((i) => i.id === payload.instructor_id);
+      const category = previewCategories.find((c) => c.id === payload.category_id);
+      Object.assign(course, payload, {
+        slug: slugify(payload.title) || course.slug,
+        instructor_name: instructor?.name || '—',
+        category_name: category?.name || '—'
+      });
+      return res.json({ success: true, message: 'Đã cập nhật khóa học.' });
+    }
+
+    const current = await queryOne('SELECT slug FROM courses WHERE id = ?', [id]);
+    if (!current) return res.json({ success: false, message: 'Không tìm thấy khóa học.' });
+
+    const slugBase = slugify(title) || current.slug;
+    let slug = slugBase;
+    let idx = 1;
+    while (await queryOne('SELECT id FROM courses WHERE slug = ? AND id <> ?', [slug, id])) {
+      idx += 1;
+      slug = `${slugBase}-${idx}`;
+    }
+
+    await queryExec(
+      `UPDATE courses
+       SET title = ?, slug = ?, description = ?, price = ?, original_price = ?,
+           instructor_id = ?, category_id = ?, level = ?, duration = ?, total_lessons = ?, is_featured = ?
+       WHERE id = ?`,
+      [
+        payload.title,
+        slug,
+        payload.description,
+        payload.price,
+        payload.original_price,
+        payload.instructor_id,
+        payload.category_id,
+        payload.level,
+        payload.duration,
+        payload.total_lessons,
+        payload.is_featured,
+        id
+      ]
+    );
+
+    return res.json({ success: true, message: 'Đã cập nhật khóa học.' });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post('/admin/courses/delete/:id', ensureAdmin, async (req, res, next) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isInteger(id)) {
+      return res.json({ success: false, message: 'ID không hợp lệ.' });
+    }
+
+    if (PREVIEW_MODE) {
+      const idx = previewCourses.findIndex((c) => c.id === id);
+      if (idx === -1) return res.json({ success: false, message: 'Không tìm thấy khóa học.' });
+      previewCourses.splice(idx, 1);
+      for (let i = previewEnrollments.length - 1; i >= 0; i -= 1) {
+        if (previewEnrollments[i].course_id === id) previewEnrollments.splice(i, 1);
+      }
+      return res.json({ success: true, message: 'Đã xóa khóa học.' });
+    }
+
+    const result = await queryExec('DELETE FROM courses WHERE id = ?', [id]);
+    if (toNumber(result.affectedRows) < 1) {
+      return res.json({ success: false, message: 'Không tìm thấy khóa học.' });
+    }
+    return res.json({ success: true, message: 'Đã xóa khóa học.' });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.get('/admin/contacts', ensureAdmin, async (req, res, next) => {
+  try {
+    const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+    const perPage = 10;
+
+    if (PREVIEW_MODE) {
+      const sorted = previewContacts.slice().sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+      const pager = paginateList(sorted, page, perPage);
+      return res.render(
+        'admin/contacts.html',
+        await adminRenderData(req, 'admin_contacts', {
+          contacts: pager.items,
+          total: pager.total,
+          page: pager.page,
+          total_pages: pager.totalPages
+        })
+      );
+    }
+
+    const totalRow = await queryOne('SELECT COUNT(*) AS total FROM contacts');
+    const total = toNumber(totalRow?.total);
+    const totalPages = Math.max(Math.ceil(total / perPage), 1);
+    const safePage = Math.min(page, totalPages);
+    const offset = (safePage - 1) * perPage;
+
+    const contacts = await queryAll('SELECT * FROM contacts ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?', [
+      perPage,
+      offset
+    ]);
+
+    return res.render(
+      'admin/contacts.html',
+      await adminRenderData(req, 'admin_contacts', {
+        contacts,
+        total,
+        page: safePage,
+        total_pages: totalPages
+      })
+    );
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.post('/admin/contacts/delete/:id', ensureAdmin, async (req, res, next) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isInteger(id)) {
+      return res.json({ success: false, message: 'ID không hợp lệ.' });
+    }
+
+    if (PREVIEW_MODE) {
+      const idx = previewContacts.findIndex((c) => c.id === id);
+      if (idx === -1) return res.json({ success: false, message: 'Không tìm thấy liên hệ.' });
+      previewContacts.splice(idx, 1);
+      return res.json({ success: true, message: 'Đã xóa liên hệ.' });
+    }
+
+    const result = await queryExec('DELETE FROM contacts WHERE id = ?', [id]);
+    if (toNumber(result.affectedRows) < 1) {
+      return res.json({ success: false, message: 'Không tìm thấy liên hệ.' });
+    }
+    return res.json({ success: true, message: 'Đã xóa liên hệ.' });
   } catch (error) {
     return next(error);
   }

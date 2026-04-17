@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
     email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
     avatar TEXT DEFAULT NULL,
+    is_admin INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -122,3 +123,6 @@ INSERT INTO reviews (user_id, course_id, rating, comment) VALUES
 (1, 1, 5, 'Khóa học cực kỳ chi tiết và dễ hiểu! Giảng viên giải thích rất rõ ràng từng bước.'),
 (2, 2, 5, 'Mình đã tăng traffic từ 500 lên 5000/ngày sau khi học khóa này. Quá tuyệt!'),
 (3, 3, 5, 'Kiếm được 15 triệu/tháng sau 3 tháng áp dụng. Cảm ơn thầy rất nhiều!');
+
+-- Admin account
+INSERT OR IGNORE INTO users (name,email,password,is_admin) VALUES ('Administrator','admin@educonnect.vn','scrypt:32768:8:1$nBCzaAjYGBissXnu$31b16c083e4ba090bd7fc749a5021471f9699db16c5c9fe87b0d785f449623356ae576c0ae594465aab60c9e7fcd4d2d3936882a0fb5e46f66de83cb92e8eae7',1);

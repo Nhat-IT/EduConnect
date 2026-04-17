@@ -6,7 +6,7 @@
   <title>Quản Lý Khóa Học — EduConnect</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/admin.css">
+  <link rel="stylesheet" href="../../static/css/admin.css">
 </head>
 <body class="admin-body">
 
@@ -18,22 +18,22 @@
   <nav class="sidebar-nav">
     <div class="nav-group">
       <span class="nav-group-label">Tổng Quan</span>
-      <a href="/admin/dashboard.html" class="sidebar-link">
+      <a href="dashboard.html" class="sidebar-link">
         <span class="sl-icon">📊</span> Dashboard
       </a>
     </div>
     <div class="nav-group">
       <span class="nav-group-label">Quản Lý</span>
-      <a href="/admin/courses.html" class="sidebar-link active">
+      <a href="courses.html" class="sidebar-link active">
         <span class="sl-icon">📚</span> Khóa Học
       </a>
-      <a href="/admin/users.html" class="sidebar-link">
+      <a href="users.html" class="sidebar-link">
         <span class="sl-icon">👥</span> Học Viên
       </a>
-      <a href="/admin/categories.html" class="sidebar-link">
+      <a href="categories.html" class="sidebar-link">
         <span class="sl-icon">🏷️</span> Danh Mục
       </a>
-      <a href="/admin/contacts.html" class="sidebar-link">
+      <a href="contacts.html" class="sidebar-link">
         <span class="sl-icon">✉️</span> Liên Hệ
       </a>
     </div>
@@ -62,7 +62,7 @@
       <span></span><span></span><span></span>
     </button>
     <div class="topbar-breadcrumb">
-      <a href="/admin/dashboard.html" class="breadcrumb-home">🏠</a>
+      <a href="dashboard.html" class="breadcrumb-home">🏠</a>
       <span class="breadcrumb-sep">›</span>
       <span class="topbar-title">Quản Lý Khóa Học</span>
     </div>
@@ -162,7 +162,7 @@
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 <div class="admin-toast" id="admin-toast"></div>
 
-<script src="/static/js/admin.js"></script>
+<script src="../../static/js/admin.js"></script>
 <script>
 let currentPage = 1;
 let currentQuery = '';

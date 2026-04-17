@@ -512,7 +512,11 @@ app.get('/khoa-hoc', async (req, res, next) => {
     const category = (req.query.category || '').trim();
     const priceFilter = (req.query.price || '').trim();
     const level = (req.query.level || '').trim();
-    const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+    
+    // ĐÃ SỬA LỖI Ở ĐÂY: Xử lý trường hợp người dùng nhập chữ vào số trang (tránh ra NaN)
+    let parsedPage = parseInt(req.query.page, 10);
+    const page = isNaN(parsedPage) ? 1 : Math.max(parsedPage, 1);
+    
     const perPage = 9;
 
     if (PREVIEW_MODE) {
@@ -635,6 +639,11 @@ app.get('/khoa-hoc', async (req, res, next) => {
     next(error);
   }
 });
+
+// =========================================================
+// !!! CÁC ROUTE PHÍA DƯỚI (/search, /gioi-thieu, /login...) 
+// BẠN VẪN GIỮ NGUYÊN NHƯ FILE GỐC, KHÔNG CẦN CHỈNH SỬA !!!
+// =========================================================
 
 app.get('/search', async (req, res, next) => {
   try {
@@ -983,6 +992,13 @@ app.get('/admin/login', (req, res) => {
   return res.sendFile(path.join(__dirname, 'templates/admin/login.html'));
 });
 
+app.get('/admin/login.html', (req, res) => {
+  if (req.session.admin_user) {
+    return res.redirect('/admin/dashboard');
+  }
+  return res.sendFile(path.join(__dirname, 'templates/admin/login.html'));
+});
+
 app.post('/admin/login', (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const password = String(req.body.password || '');
@@ -1126,7 +1142,15 @@ app.get('/admin/dashboard', ensureAdmin, (req, res) => {
   return res.sendFile(path.join(__dirname, 'templates/admin/dashboard.html'));
 });
 
+app.get('/admin/dashboard.html', ensureAdmin, (req, res) => {
+  return res.sendFile(path.join(__dirname, 'templates/admin/dashboard.html'));
+});
+
 app.get('/admin/users', ensureAdmin, (req, res) => {
+  return res.sendFile(path.join(__dirname, 'templates/admin/users.html'));
+});
+
+app.get('/admin/users.html', ensureAdmin, (req, res) => {
   return res.sendFile(path.join(__dirname, 'templates/admin/users.html'));
 });
 
@@ -1707,11 +1731,23 @@ app.get('/admin/categories', ensureAdmin, (req, res) => {
   return res.sendFile(path.join(__dirname, 'templates/admin/categories.html'));
 });
 
+app.get('/admin/categories.html', ensureAdmin, (req, res) => {
+  return res.sendFile(path.join(__dirname, 'templates/admin/categories.html'));
+});
+
 app.get('/admin/courses', ensureAdmin, (req, res) => {
   return res.sendFile(path.join(__dirname, 'templates/admin/courses.html'));
 });
 
+app.get('/admin/courses.html', ensureAdmin, (req, res) => {
+  return res.sendFile(path.join(__dirname, 'templates/admin/courses.html'));
+});
+
 app.get('/admin/contacts', ensureAdmin, (req, res) => {
+  return res.sendFile(path.join(__dirname, 'templates/admin/contacts.html'));
+});
+
+app.get('/admin/contacts.html', ensureAdmin, (req, res) => {
   return res.sendFile(path.join(__dirname, 'templates/admin/contacts.html'));
 });
 

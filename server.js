@@ -642,10 +642,6 @@ app.get('/khoa-hoc', async (req, res, next) => {
   }
 });
 
-// =========================================================
-// !!! CÁC ROUTE PHÍA DƯỚI (/search, /gioi-thieu, /login...) 
-// BẠN VẪN GIỮ NGUYÊN NHƯ FILE GỐC, KHÔNG CẦN CHỈNH SỬA !!!
-// =========================================================
 
 app.get('/search', async (req, res, next) => {
   try {

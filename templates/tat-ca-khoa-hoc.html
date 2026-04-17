@@ -1,168 +1,96 @@
-{% extends "layout.html" %}
-{% block title %}Tất Cả Khóa Học – EduConnect{% endblock %}
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/tat-ca-khoa-hoc.css') }}">
-{% endblock %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tất Cả Khóa Học – EduConnect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../static/css/base.css">
+  <link rel="stylesheet" href="../static/css/responsive.css">
+  <link rel="stylesheet" href="../static/css/tat-ca-khoa-hoc.css">
+</head>
+<body>
+<header class="site-header" id="site-header">
+  <div class="container header-inner">
+    <a href="trang-chu.html" class="logo"><span class="logo-icon">🎓</span><span class="logo-text">Edu<strong>Connect</strong></span></a>
+    <nav class="main-nav" id="main-nav">
+      <a href="trang-chu.html" class="nav-link">Trang Chủ</a>
+      <a href="tat-ca-khoa-hoc.html" class="nav-link active">Khóa Học</a>
+      <a href="gioi-thieu.html" class="nav-link">Giới Thiệu</a>
+      <a href="lien-he.html" class="nav-link">Liên Hệ</a>
+    </nav>
+    <div class="header-actions">
+      <button class="btn-outline-sm" onclick="openModal('login-modal')">Đăng Nhập</button>
+      <button class="btn-primary-sm" onclick="openModal('register-modal')">Đăng Ký</button>
+    </div>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+</header>
 
-{% block content %}
-
-<!-- Page header -->
+<main>
 <div class="page-header-courses">
   <div class="container">
     <h1>Tất Cả Khóa Học</h1>
-    <p>Khám phá {{ total }} khóa học chất lượng cao từ các chuyên gia hàng đầu</p>
+    <p>Khám phá 56 khóa học chất lượng cao từ các chuyên gia hàng đầu</p>
   </div>
 </div>
 
-<!-- Filter overlay (fixed, ngoài mọi grid) -->
 <div class="filter-overlay" id="filter-overlay" onclick="closeFilter()"></div>
 
 <section class="section">
   <div class="container">
-
-    <!-- Toolbar -->
     <div class="courses-toolbar">
       <div class="toolbar-left">
         <button class="filter-toggle" onclick="openFilter()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
           Bộ Lọc
         </button>
-        <span class="result-count"><strong>{{ total }}</strong> khóa học</span>
+        <span class="result-count"><strong>56</strong> khóa học</span>
       </div>
       <div class="toolbar-right">
-        {% if q %}<span class="active-filter">🔍 "{{ q }}" <a href="{{ url_for('tat_ca_khoa_hoc') }}">✕</a></span>{% endif %}
-        {% if selected_category %}<span class="active-filter">📂 {{ selected_category_name }} <a href="{{ url_for('tat_ca_khoa_hoc') }}">✕</a></span>{% endif %}
-        {% if level %}<span class="active-filter">📊 {{ level_label }} <a href="{{ url_for('tat_ca_khoa_hoc') }}">✕</a></span>{% endif %}
-        {% if price_filter %}<span class="active-filter">💰 {{ price_filter_label }} <a href="{{ url_for('tat_ca_khoa_hoc') }}">✕</a></span>{% endif %}
+        <span class="active-filter">📂 Lập Trình Web <a href="#" onclick="return false;">✕</a></span>
       </div>
     </div>
 
     <div class="courses-layout">
-
-      <!-- FILTER SIDEBAR -->
       <aside class="filter-sidebar" id="filter-sidebar">
-        <div class="filter-header-mobile">
-          <h3>Bộ Lọc</h3>
-          <button onclick="closeFilter()">✕</button>
-        </div>
-        <form id="filter-form" method="GET" action="{{ url_for('tat_ca_khoa_hoc') }}">
-          <div class="filter-section">
-            <h4>🔍 Tìm Kiếm</h4>
-            <div class="filter-search">
-              <input type="text" name="q" value="{{ q }}" placeholder="Tên khóa học...">
-            </div>
-          </div>
-          <div class="filter-section">
-            <h4>📂 Danh Mục</h4>
-            <div class="filter-options">
-              <label class="filter-opt"><input type="radio" name="category" value="" {% if not selected_category %}checked{% endif %}><span>Tất cả</span></label>
-              {% for cat in categories %}
-              <label class="filter-opt"><input type="radio" name="category" value="{{ cat.slug }}" {% if selected_category==cat.slug %}checked{% endif %}><span>{{ cat.name }}</span></label>
-              {% endfor %}
-            </div>
-          </div>
-          <div class="filter-section">
-            <h4>📊 Cấp Độ</h4>
-            <div class="filter-options">
-              <label class="filter-opt"><input type="radio" name="level" value="" {% if not level %}checked{% endif %}><span>Tất cả</span></label>
-              <label class="filter-opt"><input type="radio" name="level" value="beginner" {% if level=='beginner' %}checked{% endif %}><span>🟢 Cơ bản</span></label>
-              <label class="filter-opt"><input type="radio" name="level" value="intermediate" {% if level=='intermediate' %}checked{% endif %}><span>🟡 Trung cấp</span></label>
-              <label class="filter-opt"><input type="radio" name="level" value="advanced" {% if level=='advanced' %}checked{% endif %}><span>🔴 Nâng cao</span></label>
-            </div>
-          </div>
-          <div class="filter-section">
-            <h4>💰 Học Phí</h4>
-            <div class="filter-options">
-              <label class="filter-opt"><input type="radio" name="price" value="" {% if not price_filter %}checked{% endif %}><span>Tất cả</span></label>
-              <label class="filter-opt"><input type="radio" name="price" value="free" {% if price_filter=='free' %}checked{% endif %}><span>Miễn phí</span></label>
-              <label class="filter-opt"><input type="radio" name="price" value="paid" {% if price_filter=='paid' %}checked{% endif %}><span>Có phí</span></label>
-            </div>
-          </div>
-          <button type="submit" class="btn-primary full-width">Áp Dụng Bộ Lọc</button>
-          <a href="{{ url_for('tat_ca_khoa_hoc') }}" class="btn-clear">Xóa tất cả bộ lọc</a>
+        <div class="filter-header-mobile"><h3>Bộ Lọc</h3><button onclick="closeFilter()">✕</button></div>
+        <form id="filter-form" onsubmit="return false;">
+          <div class="filter-section"><h4>🔍 Tìm Kiếm</h4><div class="filter-search"><input type="text" placeholder="Tên khóa học..."></div></div>
+          <div class="filter-section"><h4>📂 Danh Mục</h4><div class="filter-options"><label class="filter-opt"><input type="radio" checked><span>Tất cả</span></label><label class="filter-opt"><input type="radio"><span>Lập Trình Web</span></label><label class="filter-opt"><input type="radio"><span>SEO</span></label></div></div>
+          <div class="filter-section"><h4>📊 Cấp Độ</h4><div class="filter-options"><label class="filter-opt"><input type="radio" checked><span>Tất cả</span></label><label class="filter-opt"><input type="radio"><span>🟢 Cơ bản</span></label><label class="filter-opt"><input type="radio"><span>🟡 Trung cấp</span></label></div></div>
+          <button type="button" class="btn-primary full-width" onclick="showToast('Trang tĩnh: bộ lọc không truy vấn dữ liệu.', 'error')">Áp Dụng Bộ Lọc</button>
         </form>
       </aside>
 
-      <!-- COURSES MAIN -->
       <div class="courses-main">
-        {% if courses %}
         <div class="courses-grid-kh">
-          {% for course in courses %}
-          <div class="course-card">
-            <div class="course-card__img">
-              <span>{{ ['📚','💻','📈','🎨','🚀','💡'][loop.index0 % 6] }}</span>
-            </div>
-            <div class="course-card__body">
-              <div class="card-top-row">
-                <span class="course-card__category">{{ course.category_name }}</span>
-                <span class="badge badge-{{ course.level }}">{{ course.level_label }}</span>
-              </div>
-              <h3 class="course-card__title">{{ course.title }}</h3>
-              <p class="course-card__instructor">👨‍🏫 {{ course.instructor_name }}</p>
-              <div class="course-card__meta">
-                <span class="course-card__rating">⭐ {{ course.rating_text }}</span>
-                <span>🎬 {{ course.total_lessons }} bài</span>
-                <span>👥 {{ course.total_students | number }}</span>
-              </div>
-              <p class="course-desc">{{ course.description_short }}{% if course.has_long_description %}...{% endif %}</p>
-              <div class="course-card__footer">
-                <div class="price-group">
-                  <span class="price-now">{{ course.price | currency }}</span>
-                  {% if course.original_price and course.original_price > course.price %}
-                  <span class="price-old">{{ course.original_price | currency }}</span>
-                  <span class="price-badge">-{{ course.discount_percent }}%</span>
-                  {% endif %}
-                </div>
-                {% if current_user %}
-                <button class="btn-card" onclick="enrollCourse({{ course.id }}, this)">Đăng Ký</button>
-                {% else %}
-                <button class="btn-card" onclick="openModal('login-modal')">Đăng Ký</button>
-                {% endif %}
-              </div>
-            </div>
-          </div>
-          {% endfor %}
+          <div class="course-card"><div class="course-card__img"><span>💻</span></div><div class="course-card__body"><div class="card-top-row"><span class="course-card__category">Lập Trình Web</span><span class="badge badge-beginner">Cơ bản</span></div><h3 class="course-card__title">Lập Trình Web Từ Zero Đến Hero</h3><p class="course-card__instructor">👨‍🏫 Nguyễn Văn An</p><div class="course-card__meta"><span class="course-card__rating">⭐ 4.8</span><span>🎬 120 bài</span><span>👥 2,340</span></div><p class="course-desc">Khóa học toàn diện từ HTML, CSS, JavaScript đến React và Node.js...</p><div class="course-card__footer"><div class="price-group"><span class="price-now">799,000₫</span><span class="price-old">1,200,000₫</span><span class="price-badge">-33%</span></div><button class="btn-card" onclick="showToast('Trang tĩnh: không xử lý đăng ký khóa học.', 'error')">Đăng Ký</button></div></div></div>
+          <div class="course-card"><div class="course-card__img"><span>📈</span></div><div class="course-card__body"><div class="card-top-row"><span class="course-card__category">SEO</span><span class="badge badge-intermediate">Trung cấp</span></div><h3 class="course-card__title">SEO Thực Chiến 2024</h3><p class="course-card__instructor">👨‍🏫 Trần Thị Bình</p><div class="course-card__meta"><span class="course-card__rating">⭐ 4.7</span><span>🎬 80 bài</span><span>👥 1,890</span></div><p class="course-desc">Học SEO từ cơ bản đến nâng cao, tối ưu website lên top Google...</p><div class="course-card__footer"><div class="price-group"><span class="price-now">599,000₫</span><span class="price-old">900,000₫</span><span class="price-badge">-33%</span></div><button class="btn-card" onclick="showToast('Trang tĩnh: không xử lý đăng ký khóa học.', 'error')">Đăng Ký</button></div></div></div>
+          <div class="course-card"><div class="course-card__img"><span>🎨</span></div><div class="course-card__body"><div class="card-top-row"><span class="course-card__category">Thiết Kế</span><span class="badge badge-beginner">Cơ bản</span></div><h3 class="course-card__title">Thiết Kế UI/UX Chuyên Nghiệp</h3><p class="course-card__instructor">👨‍🏫 Trần Thị Bình</p><div class="course-card__meta"><span class="course-card__rating">⭐ 4.7</span><span>🎬 110 bài</span><span>👥 980</span></div><p class="course-desc">Figma, Adobe XD và nguyên tắc thiết kế hiện đại...</p><div class="course-card__footer"><div class="price-group"><span class="price-now">749,000₫</span><span class="price-old">1,100,000₫</span><span class="price-badge">-32%</span></div><button class="btn-card" onclick="showToast('Trang tĩnh: không xử lý đăng ký khóa học.', 'error')">Đăng Ký</button></div></div></div>
         </div>
 
-        {% if total_pages > 1 %}
         <div class="pagination">
-          {% if page > 1 %}
-          <a href="?page={{ page-1 }}&q={{ q }}&category={{ selected_category }}&level={{ level }}&price={{ price_filter }}" class="page-btn">←</a>
-          {% else %}
           <span class="page-btn disabled">←</span>
-          {% endif %}
-          {% for p in page_items %}
-            {% if p.type == 'ellipsis' %}
-            <span class="page-btn disabled" style="border:none;">…</span>
-            {% elif p.active %}
-            <span class="page-btn active">{{ p.value }}</span>
-            {% else %}
-            <a href="?page={{ p.value }}&q={{ q }}&category={{ selected_category }}&level={{ level }}&price={{ price_filter }}" class="page-btn">{{ p.value }}</a>
-            {% endif %}
-          {% endfor %}
-          {% if page < total_pages %}
-          <a href="?page={{ page+1 }}&q={{ q }}&category={{ selected_category }}&level={{ level }}&price={{ price_filter }}" class="page-btn">→</a>
-          {% else %}
-          <span class="page-btn disabled">→</span>
-          {% endif %}
+          <span class="page-btn active">1</span>
+          <a href="#" class="page-btn" onclick="return false;">2</a>
+          <a href="#" class="page-btn" onclick="return false;">3</a>
+          <span class="page-btn disabled" style="border:none;">…</span>
+          <a href="#" class="page-btn" onclick="return false;">6</a>
+          <a href="#" class="page-btn" onclick="return false;">→</a>
         </div>
-        {% endif %}
-
-        {% else %}
-        <div class="no-results">
-          <div class="no-results-icon">🔍</div>
-          <h3>Không tìm thấy khóa học nào</h3>
-          <p>Thử thay đổi từ khóa hoặc xóa bộ lọc để xem thêm.</p>
-          <a href="{{ url_for('tat_ca_khoa_hoc') }}" class="btn-primary">Xem Tất Cả</a>
-        </div>
-        {% endif %}
-      </div><!-- end .courses-main -->
-
-    </div><!-- end .courses-layout -->
+      </div>
+    </div>
   </div>
 </section>
-{% endblock %}
+</main>
 
-{% block extra_js %}
-<script src="{{ url_for('static', filename='js/tat-ca-khoa-hoc.js') }}"></script>
-{% endblock %}
+<script src="../static/js/main.js"></script>
+<script>
+function openFilter(){document.getElementById('filter-sidebar').classList.add('open');document.getElementById('filter-overlay').classList.add('open');document.body.style.overflow='hidden';}
+function closeFilter(){document.getElementById('filter-sidebar').classList.remove('open');document.getElementById('filter-overlay').classList.remove('open');document.body.style.overflow='';}
+document.addEventListener('keydown',e=>{if(e.key==='Escape') closeFilter();});
+</script>
+</body>
+</html>

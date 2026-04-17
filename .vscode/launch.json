@@ -1,0 +1,57 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "pwa-chrome",
+            "request": "launch",
+            "name": "Mo file HTML hien tai (F5)",
+            "file": "${file}",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
+            "type": "pwa-chrome",
+            "request": "launch",
+            "name": "Mo trang-chu.html",
+            "file": "${workspaceFolder}/templates/trang-chu.html",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
+            "type": "pwa-chrome",
+            "request": "launch",
+            "name": "Mo tat-ca-khoa-hoc.html",
+            "file": "${workspaceFolder}/templates/tat-ca-khoa-hoc.html",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
+            "type": "pwa-chrome",
+            "request": "launch",
+            "name": "Mo gioi-thieu.html",
+            "file": "${workspaceFolder}/templates/gioi-thieu.html",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
+            "type": "pwa-chrome",
+            "request": "launch",
+            "name": "Mo lien-he.html",
+            "file": "${workspaceFolder}/templates/lien-he.html",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
+            "type": "pwa-chrome",
+            "request": "launch",
+            "name": "Mo quen-mat-khau.html",
+            "file": "${workspaceFolder}/templates/quen-mat-khau.html",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
+            "type": "pwa-chrome",
+            "request": "launch",
+            "name": "Mo tai-khoan-cua-toi.html",
+            "file": "${workspaceFolder}/templates/tai-khoan-cua-toi.html",
+            "webRoot": "${workspaceFolder}"
+        }
+    ]
+}

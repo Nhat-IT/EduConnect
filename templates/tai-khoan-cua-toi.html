@@ -1,165 +1,24 @@
-{% extends "layout.html" %}
-{% block title %}Tài Khoản Của Tôi – EduConnect{% endblock %}
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/tai-khoan-cua-toi.css') }}">
-{% endblock %}
-
-{% block content %}
-<div class="profile-hero">
-  <div class="container profile-hero-inner">
-    <div class="profile-avatar-wrap">
-      <div class="profile-avatar-big">{{ user.name[0] }}</div>
-    </div>
-    <div class="profile-hero-info">
-      <h1>{{ user.name }}</h1>
-      <p>{{ user.email }}</p>
-      <div class="profile-badges">
-        <span class="badge-profile">🎓 Học Viên</span>
-        <span class="badge-profile">📅 Tham gia {{ user.join_date }}</span>
-        <span class="badge-profile">📚 {{ enrolled_courses|length }} khóa học</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<section class="section">
-  <div class="container profile-layout">
-
-    <!-- ── SIDEBAR ── -->
-    <aside class="profile-sidebar">
-      <nav class="profile-nav">
-        <a href="#courses" class="pnav-link active" data-tab="courses">
-          <span>📚</span> Khóa Học Của Tôi
-        </a>
-        <a href="#profile" class="pnav-link" data-tab="profile">
-          <span>👤</span> Thông Tin Cá Nhân
-        </a>
-        <a href="#security" class="pnav-link" data-tab="security">
-          <span>🔐</span> Bảo Mật
-        </a>
-        <a href="{{ url_for('logout') }}" class="pnav-link pnav-logout">
-          <span>🚪</span> Đăng Xuất
-        </a>
-      </nav>
-    </aside>
-
-    <!-- ── MAIN CONTENT ── -->
-    <div class="profile-main">
-
-      <!-- Tab: Courses -->
-      <div class="tab-panel active" id="tab-courses">
-        <div class="panel-header">
-          <h2>Khóa Học Của Tôi</h2>
-          <a href="{{ url_for('tat_ca_khoa_hoc') }}" class="btn-primary-sm">+ Thêm Khóa Học</a>
-        </div>
-
-        {% if enrolled_courses %}
-        <div class="enrolled-list">
-          {% for course in enrolled_courses %}
-          <div class="enrolled-card">
-            <div class="enrolled-icon">
-              {{ ['📚','💻','📈','🎨','🚀','💡'][loop.index0 % 6] }}
-            </div>
-            <div class="enrolled-body">
-              <h3 class="enrolled-title">{{ course.title }}</h3>
-              <p class="enrolled-meta">👨‍🏫 {{ course.instructor_name }} • 🎬 {{ course.total_lessons }} bài học</p>
-              <div class="progress-wrap">
-                <div class="progress-bar">
-                  <div class="progress-fill" style="width: {{ course.progress }}%"></div>
-                </div>
-                <span class="progress-label">{{ course.progress }}%</span>
-              </div>
-            </div>
-            <div class="enrolled-actions">
-              <div class="enrolled-status {% if course.progress == 100 %}status-done{% elif course.progress > 0 %}status-learning{% else %}status-new{% endif %}">
-                {% if course.progress == 100 %}✅ Hoàn thành
-                {% elif course.progress > 0 %}▶️ Đang học
-                {% else %}🆕 Chưa bắt đầu{% endif %}
-              </div>
-              <button class="btn-continue" onclick="showToast('Tính năng xem bài học sẽ ra mắt sớm!', 'success')">
-                {% if course.progress == 100 %}Ôn Tập{% else %}Tiếp Tục Học{% endif %}
-              </button>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-
-        {% else %}
-        <div class="empty-courses">
-          <div class="empty-icon">📭</div>
-          <h3>Bạn chưa đăng ký khóa học nào</h3>
-          <p>Hãy khám phá các khóa học chất lượng cao của EduConnect!</p>
-          <a href="{{ url_for('tat_ca_khoa_hoc') }}" class="btn-primary">Khám Phá Khóa Học →</a>
-        </div>
-        {% endif %}
-      </div>
-
-      <!-- Tab: Profile -->
-      <div class="tab-panel" id="tab-profile">
-        <div class="panel-header">
-          <h2>Thông Tin Cá Nhân</h2>
-        </div>
-        <div class="profile-form-card">
-          <form id="profile-form" class="form-card">
-            <div class="form-row-2">
-              <div class="form-group">
-                <label>Họ và Tên</label>
-                <input type="text" name="name" value="{{ user.name }}" required>
-              </div>
-              <div class="form-group">
-                <label>Email</label>
-                <input type="email" value="{{ user.email }}" disabled>
-                <small style="color:var(--neutral-500);font-size:0.78rem;">Email không thể thay đổi</small>
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Ngày Tham Gia</label>
-              <input type="text" value="{{ user.join_date }}" disabled>
-            </div>
-            <div id="profile-msg" class="form-message"></div>
-            <button type="submit" class="btn-primary">Lưu Thay Đổi</button>
-          </form>
-        </div>
-      </div>
-
-      <!-- Tab: Security -->
-      <div class="tab-panel" id="tab-security">
-        <div class="panel-header">
-          <h2>Bảo Mật Tài Khoản</h2>
-        </div>
-        <div class="security-cards">
-          <div class="security-item">
-            <div class="security-icon">🔑</div>
-            <div class="security-body">
-              <h4>Mật Khẩu</h4>
-              <p>Lần đổi cuối: Chưa có thông tin</p>
-            </div>
-            <a href="{{ url_for('quen_mat_khau') }}" class="btn-outline-sm">Đổi Mật Khẩu</a>
-          </div>
-          <div class="security-item">
-            <div class="security-icon">📧</div>
-            <div class="security-body">
-              <h4>Email Đăng Ký</h4>
-              <p>{{ user.email }}</p>
-            </div>
-            <span class="verified-badge">✓ Đã xác nhận</span>
-          </div>
-          <div class="security-item danger">
-            <div class="security-icon">⚠️</div>
-            <div class="security-body">
-              <h4>Xóa Tài Khoản</h4>
-              <p>Hành động này không thể hoàn tác</p>
-            </div>
-            <button class="btn-danger" onclick="showToast('Tính năng này chưa khả dụng.', 'error')">Xóa Tài Khoản</button>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-{% endblock %}
-
-{% block extra_js %}
-<script src="{{ url_for('static', filename='js/tai-khoan-cua-toi.js') }}"></script>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tài Khoản Của Tôi – EduConnect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../static/css/base.css">
+  <link rel="stylesheet" href="../static/css/responsive.css">
+  <link rel="stylesheet" href="../static/css/tai-khoan-cua-toi.css">
+</head>
+<body>
+<header class="site-header" id="site-header"><div class="container header-inner"><a href="trang-chu.html" class="logo"><span class="logo-icon">🎓</span><span class="logo-text">Edu<strong>Connect</strong></span></a><nav class="main-nav" id="main-nav"><a href="trang-chu.html" class="nav-link">Trang Chủ</a><a href="tat-ca-khoa-hoc.html" class="nav-link">Khóa Học</a><a href="gioi-thieu.html" class="nav-link">Giới Thiệu</a><a href="lien-he.html" class="nav-link">Liên Hệ</a></nav><div class="header-actions"><a href="tai-khoan-cua-toi.html" class="btn-account"><span class="avatar-circle">N</span><span>Nguyễn An</span></a></div><button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span></button></div></header>
+<main>
+<div class="profile-hero"><div class="container profile-hero-inner"><div class="profile-avatar-wrap"><div class="profile-avatar-big">N</div></div><div class="profile-hero-info"><h1>Nguyễn Văn An</h1><p>an.nguyen@educonnect.vn</p><div class="profile-badges"><span class="badge-profile">🎓 Học Viên</span><span class="badge-profile">📅 Tham gia 2024-01-10</span><span class="badge-profile">📚 2 khóa học</span></div></div></div></div>
+<section class="section"><div class="container profile-layout"><aside class="profile-sidebar"><nav class="profile-nav"><a href="#courses" class="pnav-link active" data-tab="courses"><span>📚</span> Khóa Học Của Tôi</a><a href="#profile" class="pnav-link" data-tab="profile"><span>👤</span> Thông Tin Cá Nhân</a><a href="#security" class="pnav-link" data-tab="security"><span>🔐</span> Bảo Mật</a></nav></aside><div class="profile-main"><div class="tab-panel active" id="tab-courses"><div class="panel-header"><h2>Khóa Học Của Tôi</h2><a href="tat-ca-khoa-hoc.html" class="btn-primary-sm">+ Thêm Khóa Học</a></div><div class="enrolled-list"><div class="enrolled-card"><div class="enrolled-icon">💻</div><div class="enrolled-body"><h3 class="enrolled-title">Lập Trình Web Từ Zero Đến Hero</h3><p class="enrolled-meta">👨‍🏫 Nguyễn Văn An • 🎬 120 bài học</p><div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" style="width:35%"></div></div><span class="progress-label">35%</span></div></div><div class="enrolled-actions"><div class="enrolled-status status-learning">▶️ Đang học</div><button class="btn-continue" onclick="showToast('Trang tĩnh: không mở bài học.', 'error')">Tiếp Tục Học</button></div></div></div></div><div class="tab-panel" id="tab-profile"><div class="panel-header"><h2>Thông Tin Cá Nhân</h2></div><div class="profile-form-card"><form class="form-card" onsubmit="return false;"><div class="form-row-2"><div class="form-group"><label>Họ và Tên</label><input type="text" value="Nguyễn Văn An"></div><div class="form-group"><label>Email</label><input type="email" value="an.nguyen@educonnect.vn" disabled></div></div><button type="button" class="btn-primary" onclick="showToast('Trang tĩnh: không lưu dữ liệu.', 'error')">Lưu Thay Đổi</button></form></div></div><div class="tab-panel" id="tab-security"><div class="panel-header"><h2>Bảo Mật Tài Khoản</h2></div><div class="security-cards"><div class="security-item"><div class="security-icon">🔑</div><div class="security-body"><h4>Mật Khẩu</h4><p>Lần đổi cuối: Chưa có thông tin</p></div><a href="quen-mat-khau.html" class="btn-outline-sm">Đổi Mật Khẩu</a></div></div></div></div></div></section>
+</main>
+<script src="../static/js/main.js"></script>
+<script>
+document.querySelectorAll('.pnav-link[data-tab]').forEach(link=>{link.addEventListener('click',e=>{e.preventDefault();const tab=link.dataset.tab;document.querySelectorAll('.pnav-link[data-tab]').forEach(l=>l.classList.remove('active'));document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));link.classList.add('active');document.getElementById('tab-'+tab).classList.add('active');});});
+</script>
+</body>
+</html>

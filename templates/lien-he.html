@@ -1,156 +1,34 @@
-{% extends "layout.html" %}
-{% block title %}Liên Hệ – EduConnect{% endblock %}
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/lien-he.css') }}">
-{% endblock %}
-
-{% block content %}
-<section class="contact-hero">
-  <div class="container" style="text-align:center;">
-    <span class="section-label">Liên Hệ</span>
-    <h1>Chúng Tôi Luôn Lắng Nghe</h1>
-    <p>Có câu hỏi? Muốn hợp tác? Hãy liên hệ với đội ngũ EduConnect!</p>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Liên Hệ – EduConnect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../static/css/base.css">
+  <link rel="stylesheet" href="../static/css/responsive.css">
+  <link rel="stylesheet" href="../static/css/lien-he.css">
+</head>
+<body>
+<header class="site-header" id="site-header">
+  <div class="container header-inner">
+    <a href="trang-chu.html" class="logo"><span class="logo-icon">🎓</span><span class="logo-text">Edu<strong>Connect</strong></span></a>
+    <nav class="main-nav" id="main-nav"><a href="trang-chu.html" class="nav-link">Trang Chủ</a><a href="tat-ca-khoa-hoc.html" class="nav-link">Khóa Học</a><a href="gioi-thieu.html" class="nav-link">Giới Thiệu</a><a href="lien-he.html" class="nav-link active">Liên Hệ</a></nav>
+    <div class="header-actions"><button class="btn-outline-sm" onclick="openModal('login-modal')">Đăng Nhập</button><button class="btn-primary-sm" onclick="openModal('register-modal')">Đăng Ký</button></div>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu"><span></span><span></span><span></span></button>
   </div>
-</section>
+</header>
 
-<section class="section">
-  <div class="container contact-layout">
+<main>
+<section class="contact-hero"><div class="container" style="text-align:center;"><span class="section-label">Liên Hệ</span><h1>Chúng Tôi Luôn Lắng Nghe</h1><p>Có câu hỏi? Muốn hợp tác? Hãy liên hệ với đội ngũ EduConnect!</p></div></section>
+<section class="section"><div class="container contact-layout"><div class="contact-info"><h2>Thông Tin Liên Hệ</h2><p>Đội ngũ EduConnect luôn sẵn sàng hỗ trợ bạn trong giờ hành chính.</p><div class="contact-cards"><div class="contact-card"><div class="contact-card__icon">📍</div><div><strong>Địa Chỉ</strong><span>123 Đường Lê Lợi, Quận 1<br>TP. Hồ Chí Minh, Việt Nam</span></div></div><div class="contact-card"><div class="contact-card__icon">📞</div><div><strong>Điện Thoại</strong><span>0909 999 888<br>Thứ 2 – Thứ 7, 8:00 – 17:00</span></div></div><div class="contact-card"><div class="contact-card__icon">✉️</div><div><strong>Email</strong><span>hello@educonnect.vn<br>support@educonnect.vn</span></div></div></div></div><div class="contact-form-wrap"><div class="contact-form-card"><h2>Gửi Tin Nhắn</h2><p>Điền form bên dưới, chúng tôi sẽ phản hồi trong vòng 24 giờ.</p><form id="contact-form-static" class="form-card" style="margin-top:28px;" onsubmit="return false;"><div class="form-row"><div class="form-group"><label>Họ và Tên *</label><input type="text" placeholder="Nguyễn Văn A" required></div><div class="form-group"><label>Email *</label><input type="email" placeholder="email@example.com" required></div></div><div class="form-group"><label>Chủ Đề</label><select><option>Hỏi về khóa học</option><option>Hỗ trợ kỹ thuật</option><option>Hợp tác giảng dạy</option></select></div><div class="form-group"><label>Nội Dung *</label><textarea placeholder="Nhập nội dung tin nhắn của bạn..." required rows="5"></textarea></div><button type="button" class="btn-primary full-width" onclick="showToast('Trang tĩnh: không gửi dữ liệu lên server.', 'error')">Gửi Tin Nhắn →</button></form></div></div></div></section>
+<section class="section section-alt"><div class="container"><div class="section-head center"><span class="section-label">FAQ</span><h2 class="section-title">Câu Hỏi Thường Gặp</h2></div><div class="faq-list"><div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">Tôi có thể học thử trước khi mua không?<span class="faq-arrow">▼</span></button><div class="faq-answer"><p>Có! Mỗi khóa học đều có bài học miễn phí để bạn trải nghiệm.</p></div></div><div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">Chính sách hoàn tiền như thế nào?<span class="faq-arrow">▼</span></button><div class="faq-answer"><p>EduConnect cam kết hoàn tiền 100% trong vòng 30 ngày.</p></div></div><div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">Tôi có thể học trên điện thoại không?<span class="faq-arrow">▼</span></button><div class="faq-answer"><p>Hoàn toàn được! EduConnect tương thích mọi thiết bị.</p></div></div></div></div></section>
+</main>
 
-    <!-- Info -->
-    <div class="contact-info">
-      <h2>Thông Tin Liên Hệ</h2>
-      <p>Đội ngũ EduConnect luôn sẵn sàng hỗ trợ bạn trong giờ hành chính.</p>
-
-      <div class="contact-cards">
-        <div class="contact-card">
-          <div class="contact-card__icon">📍</div>
-          <div>
-            <strong>Địa Chỉ</strong>
-            <span>123 Đường Lê Lợi, Quận 1<br>TP. Hồ Chí Minh, Việt Nam</span>
-          </div>
-        </div>
-        <div class="contact-card">
-          <div class="contact-card__icon">📞</div>
-          <div>
-            <strong>Điện Thoại</strong>
-            <span>0909 999 888<br>Thứ 2 – Thứ 7, 8:00 – 17:00</span>
-          </div>
-        </div>
-        <div class="contact-card">
-          <div class="contact-card__icon">✉️</div>
-          <div>
-            <strong>Email</strong>
-            <span>hello@educonnect.vn<br>support@educonnect.vn</span>
-          </div>
-        </div>
-        <div class="contact-card">
-          <div class="contact-card__icon">⏰</div>
-          <div>
-            <strong>Giờ Làm Việc</strong>
-            <span>Thứ 2 – Thứ 6: 8:00 – 17:00<br>Thứ 7: 8:00 – 12:00</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="contact-socials">
-        <h4>Theo Dõi Chúng Tôi</h4>
-        <div class="social-row">
-          <a href="#" class="social-btn">📘 Facebook</a>
-          <a href="#" class="social-btn">▶️ YouTube</a>
-          <a href="#" class="social-btn">♪ TikTok</a>
-        </div>
-      </div>
-    </div>
-
-    <!-- Form -->
-    <div class="contact-form-wrap">
-      <div class="contact-form-card">
-        <h2>Gửi Tin Nhắn</h2>
-        <p>Điền form bên dưới, chúng tôi sẽ phản hồi trong vòng 24 giờ.</p>
-        <form id="contact-form" class="form-card" style="margin-top:28px;">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Họ và Tên *</label>
-              <input type="text" name="name" placeholder="Nguyễn Văn A" required>
-            </div>
-            <div class="form-group">
-              <label>Email *</label>
-              <input type="email" name="email" placeholder="email@example.com" required>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Chủ Đề</label>
-            <select name="subject">
-              <option value="">Chọn chủ đề...</option>
-              <option>Hỏi về khóa học</option>
-              <option>Hỗ trợ kỹ thuật</option>
-              <option>Hợp tác giảng dạy</option>
-              <option>Phản hồi chất lượng</option>
-              <option>Khác</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Nội Dung *</label>
-            <textarea name="message" placeholder="Nhập nội dung tin nhắn của bạn..." required rows="5"></textarea>
-          </div>
-          <div id="contact-msg" class="form-message"></div>
-          <button type="submit" class="btn-primary full-width">Gửi Tin Nhắn →</button>
-        </form>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<!-- FAQ -->
-<section class="section section-alt">
-  <div class="container">
-    <div class="section-head center">
-      <span class="section-label">FAQ</span>
-      <h2 class="section-title">Câu Hỏi Thường Gặp</h2>
-    </div>
-    <div class="faq-list">
-      <div class="faq-item">
-        <button class="faq-question" onclick="toggleFaq(this)">
-          Tôi có thể học thử trước khi mua không?
-          <span class="faq-arrow">▼</span>
-        </button>
-        <div class="faq-answer">
-          <p>Có! Mỗi khóa học đều có 1-2 bài học miễn phí để bạn trải nghiệm trước khi quyết định mua. Bạn cũng có thể xem chi tiết nội dung chương trình trước khi đăng ký.</p>
-        </div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question" onclick="toggleFaq(this)">
-          Chính sách hoàn tiền như thế nào?
-          <span class="faq-arrow">▼</span>
-        </button>
-        <div class="faq-answer">
-          <p>EduConnect cam kết hoàn tiền 100% trong vòng 30 ngày nếu bạn không hài lòng với khóa học. Không cần giải thích lý do.</p>
-        </div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question" onclick="toggleFaq(this)">
-          Sau khi mua, tôi được học trong bao lâu?
-          <span class="faq-arrow">▼</span>
-        </button>
-        <div class="faq-answer">
-          <p>Bạn được truy cập trọn đời sau khi mua khóa học. Nội dung cũng được cập nhật miễn phí khi có phiên bản mới.</p>
-        </div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question" onclick="toggleFaq(this)">
-          Tôi có thể học trên điện thoại không?
-          <span class="faq-arrow">▼</span>
-        </button>
-        <div class="faq-answer">
-          <p>Hoàn toàn được! EduConnect tương thích với mọi thiết bị – máy tính, điện thoại Android và iOS, máy tính bảng.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-{% endblock %}
-
-{% block extra_js %}
-<script src="{{ url_for('static', filename='js/lien-he.js') }}"></script>
-{% endblock %}
+<script src="../static/js/main.js"></script>
+<script>
+function toggleFaq(btn){const item=btn.closest('.faq-item');const ans=item.querySelector('.faq-answer');const isOpen=btn.classList.contains('open');document.querySelectorAll('.faq-question.open').forEach(q=>{q.classList.remove('open');q.closest('.faq-item').querySelector('.faq-answer').classList.remove('open');});if(!isOpen){btn.classList.add('open');ans.classList.add('open');}}
+</script>
+</body>
+</html>

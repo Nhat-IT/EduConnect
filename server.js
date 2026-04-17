@@ -1703,39 +1703,6 @@ app.get('/api/admin/contacts', ensureAdmin, async (req, res, next) => {
 });
 
 // Routes for static HTML admin pages
-    }
-
-    const totalRow = await queryOne(`SELECT COUNT(*) AS total FROM courses c ${whereSql}`, params);
-    const total = toNumber(totalRow?.total);
-    const totalPages = Math.max(Math.ceil(total / perPage), 1);
-    const safePage = Math.min(page, totalPages);
-    const offset = (safePage - 1) * perPage;
-
-    const courses = await queryAll(
-      `SELECT c.*, cat.name AS category_name, COUNT(e.id) AS enroll_count
-       FROM courses c
-       LEFT JOIN categories cat ON cat.id = c.category_id
-       LEFT JOIN enrollments e ON e.course_id = c.id
-       ${whereSql}
-       GROUP BY c.id
-       ORDER BY c.id DESC
-       LIMIT ? OFFSET ?`,
-      [...params, perPage, offset]
-    );
-
-    return res.json({
-      success: true,
-      courses,
-      total,
-      page: safePage,
-      total_pages: totalPages
-    });
-  } catch (error) {
-    return next(error);
-  }
-});
-
-// Routes for static HTML admin pages
 app.get('/admin/categories', ensureAdmin, (req, res) => {
   return res.sendFile(path.join(__dirname, 'templates/admin/categories.html'));
 });

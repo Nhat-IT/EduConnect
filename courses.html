@@ -1,0 +1,323 @@
+{% extends "admin/layout.html" %}
+{% block title %}Quản Lý Khóa Học{% endblock %}
+{% block page_title %}Quản Lý Khóa Học{% endblock %}
+
+{% block content %}
+<!-- Toolbar -->
+<div class="admin-toolbar">
+  <form method="GET" class="toolbar-search">
+    <input type="text" name="q" value="{{ q }}" placeholder="Tìm tên khóa học...">
+    <button type="submit">🔍</button>
+    {% if q %}<a href="{{ url_for('admin_courses') }}" class="clear-search">✕</a>{% endif %}
+  </form>
+  <button class="btn-admin-primary" onclick="openModal('modal-add-course')">+ Thêm Khóa Học</button>
+</div>
+
+<!-- Table -->
+<div class="dash-card">
+  <div class="dash-card-header">
+    <h3>{{ total }} khóa học</h3>
+  </div>
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Tên Khóa Học</th>
+          <th>Danh Mục</th>
+          <th>Giảng Viên</th>
+          <th>Giá</th>
+          <th>HV</th>
+          <th>Cấp Độ</th>
+          <th>Nổi Bật</th>
+          <th>Thao Tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in courses %}
+        <tr>
+          <td class="td-id">{{ c.id }}</td>
+          <td>
+            <div class="td-course-name">
+              <strong>{{ c.title }}</strong>
+              <span>{{ (c.description or '')[:50] }}{% if c.description and c.description|length > 50 %}...{% endif %}</span>
+            </div>
+          </td>
+          <td><span class="tag-cat">{{ c.category_name or '—' }}</span></td>
+          <td>{{ c.instructor_name or '—' }}</td>
+          <td class="td-price">{{ "{:,.0f}".format(c.price) }}₫</td>
+          <td><strong>{{ c.total_students }}</strong></td>
+          <td>
+            <span class="badge-level badge-{{ c.level }}">
+              {{ {'beginner':'Cơ bản','intermediate':'Trung cấp','advanced':'Nâng cao'}.get(c.level, c.level) }}
+            </span>
+          </td>
+          <td>
+            {% if c.is_featured %}
+            <span class="badge-featured">⭐ Nổi bật</span>
+            {% else %}
+            <span class="badge-normal">—</span>
+            {% endif %}
+          </td>
+          <td>
+            <div class="td-actions">
+              <button class="btn-edit" onclick="editCourse({{ c.id }})" title="Sửa">✏️</button>
+              <button class="btn-delete" onclick="deleteCourse({{ c.id }}, '{{ c.title|replace("'","\\'")|replace('"','') }}')" title="Xóa">🗑️</button>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9" class="td-empty">Không tìm thấy khóa học nào.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if total_pages > 1 %}
+  <div class="admin-pagination">
+    {% if page > 1 %}<a href="?page={{ page-1 }}&q={{ q }}" class="pg-btn">←</a>{% endif %}
+    {% for p in range(1, total_pages+1) %}
+      {% if p == page %}<span class="pg-btn active">{{ p }}</span>
+      {% elif p == 1 or p == total_pages or (p >= page-2 and p <= page+2) %}<a href="?page={{ p }}&q={{ q }}" class="pg-btn">{{ p }}</a>
+      {% elif p == page-3 or p == page+3 %}<span class="pg-btn" style="border:none;pointer-events:none;">…</span>{% endif %}
+    {% endfor %}
+    {% if page < total_pages %}<a href="?page={{ page+1 }}&q={{ q }}" class="pg-btn">→</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- ══ MODAL ADD ══ -->
+<div class="admin-modal-overlay" id="modal-add-course" onclick="closeAdminModal(event,'modal-add-course')">
+  <div class="admin-modal">
+    <div class="am-header">
+      <h2>➕ Thêm Khóa Học Mới</h2>
+      <button onclick="closeModal('modal-add-course')">✕</button>
+    </div>
+    <form id="form-add-course" class="am-form">
+      <div class="am-grid-2">
+        <div class="am-field am-col-2">
+          <label>Tên Khóa Học *</label>
+          <input type="text" name="title" placeholder="Lập Trình Web Từ Zero..." required>
+        </div>
+        <div class="am-field">
+          <label>Danh Mục</label>
+          <select name="category_id">
+            <option value="">-- Chọn danh mục --</option>
+            {% for cat in categories %}
+            <option value="{{ cat.id }}">{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="am-field">
+          <label>Giảng Viên</label>
+          <select name="instructor_id">
+            <option value="">-- Chọn giảng viên --</option>
+            {% for ins in instructors %}
+            <option value="{{ ins.id }}">{{ ins.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="am-field">
+          <label>Giá (₫) *</label>
+          <input type="number" name="price" placeholder="799000" min="0" required>
+        </div>
+        <div class="am-field">
+          <label>Giá Gốc (₫)</label>
+          <input type="number" name="original_price" placeholder="1200000" min="0">
+        </div>
+        <div class="am-field">
+          <label>Cấp Độ</label>
+          <select name="level">
+            <option value="beginner">🟢 Cơ bản</option>
+            <option value="intermediate">🟡 Trung cấp</option>
+            <option value="advanced">🔴 Nâng cao</option>
+          </select>
+        </div>
+        <div class="am-field">
+          <label>Thời Lượng</label>
+          <input type="text" name="duration" placeholder="30 giờ">
+        </div>
+        <div class="am-field">
+          <label>Số Bài Học</label>
+          <input type="number" name="total_lessons" placeholder="80" min="0">
+        </div>
+        <div class="am-field am-col-2">
+          <label>Mô Tả</label>
+          <textarea name="description" placeholder="Mô tả khóa học..." rows="3"></textarea>
+        </div>
+        <div class="am-field am-checkbox">
+          <label><input type="checkbox" name="is_featured" value="1"> ⭐ Đánh dấu là khóa học nổi bật</label>
+        </div>
+      </div>
+      <div id="msg-add-course" class="am-msg"></div>
+      <div class="am-footer">
+        <button type="button" onclick="closeModal('modal-add-course')" class="btn-admin-ghost">Hủy</button>
+        <button type="submit" class="btn-admin-primary">Thêm Khóa Học</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══ MODAL EDIT ══ -->
+<div class="admin-modal-overlay" id="modal-edit-course" onclick="closeAdminModal(event,'modal-edit-course')">
+  <div class="admin-modal">
+    <div class="am-header">
+      <h2>✏️ Chỉnh Sửa Khóa Học</h2>
+      <button onclick="closeModal('modal-edit-course')">✕</button>
+    </div>
+    <form id="form-edit-course" class="am-form">
+      <input type="hidden" id="edit-course-id">
+      <div class="am-grid-2">
+        <div class="am-field am-col-2">
+          <label>Tên Khóa Học *</label>
+          <input type="text" name="title" id="edit-title" required>
+        </div>
+        <div class="am-field">
+          <label>Danh Mục</label>
+          <select name="category_id" id="edit-category">
+            <option value="">-- Chọn danh mục --</option>
+            {% for cat in categories %}
+            <option value="{{ cat.id }}">{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="am-field">
+          <label>Giảng Viên</label>
+          <select name="instructor_id" id="edit-instructor">
+            <option value="">-- Chọn giảng viên --</option>
+            {% for ins in instructors %}
+            <option value="{{ ins.id }}">{{ ins.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="am-field">
+          <label>Giá (₫)</label>
+          <input type="number" name="price" id="edit-price" min="0">
+        </div>
+        <div class="am-field">
+          <label>Giá Gốc (₫)</label>
+          <input type="number" name="original_price" id="edit-original-price" min="0">
+        </div>
+        <div class="am-field">
+          <label>Cấp Độ</label>
+          <select name="level" id="edit-level">
+            <option value="beginner">🟢 Cơ bản</option>
+            <option value="intermediate">🟡 Trung cấp</option>
+            <option value="advanced">🔴 Nâng cao</option>
+          </select>
+        </div>
+        <div class="am-field">
+          <label>Thời Lượng</label>
+          <input type="text" name="duration" id="edit-duration">
+        </div>
+        <div class="am-field">
+          <label>Số Bài Học</label>
+          <input type="number" name="total_lessons" id="edit-lessons" min="0">
+        </div>
+        <div class="am-field am-col-2">
+          <label>Mô Tả</label>
+          <textarea name="description" id="edit-description" rows="3"></textarea>
+        </div>
+        <div class="am-field am-checkbox">
+          <label><input type="checkbox" name="is_featured" id="edit-featured" value="1"> ⭐ Đánh dấu là khóa học nổi bật</label>
+        </div>
+      </div>
+      <div id="msg-edit-course" class="am-msg"></div>
+      <div class="am-footer">
+        <button type="button" onclick="closeModal('modal-edit-course')" class="btn-admin-ghost">Hủy</button>
+        <button type="submit" class="btn-admin-primary">Lưu Thay Đổi</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══ CONFIRM DELETE ══ -->
+<div class="admin-modal-overlay" id="modal-confirm-delete" onclick="closeAdminModal(event,'modal-confirm-delete')">
+  <div class="admin-modal admin-modal-sm">
+    <div class="am-header">
+      <h2>⚠️ Xác Nhận Xóa</h2>
+      <button onclick="closeModal('modal-confirm-delete')">✕</button>
+    </div>
+    <div class="am-confirm-body">
+      <p>Bạn có chắc muốn xóa khóa học:</p>
+      <strong id="delete-course-name"></strong>
+      <p class="am-warning">⚠️ Hành động này sẽ xóa tất cả dữ liệu liên quan và không thể hoàn tác!</p>
+    </div>
+    <div class="am-footer">
+      <button onclick="closeModal('modal-confirm-delete')" class="btn-admin-ghost">Hủy</button>
+      <button id="btn-confirm-delete" class="btn-admin-danger">Xóa Khóa Học</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add course
+document.getElementById('form-add-course').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = e.target.querySelector('[type=submit]');
+  btn.textContent = 'Đang thêm...'; btn.disabled = true;
+  const fd = new FormData(e.target);
+  if (!fd.get('is_featured')) fd.set('is_featured', '0');
+  const res = await fetch('/admin/courses/add', {method:'POST', body:fd});
+  const data = await res.json();
+  showAdminToast(data.message, data.success ? 'success' : 'error');
+  if (data.success) { setTimeout(() => location.reload(), 800); }
+  btn.textContent = 'Thêm Khóa Học'; btn.disabled = false;
+});
+
+// Load edit
+async function editCourse(id) {
+  const res = await fetch(`/admin/courses/get/${id}`);
+  const c = await res.json();
+  document.getElementById('edit-course-id').value = c.id;
+  document.getElementById('edit-title').value = c.title || '';
+  document.getElementById('edit-description').value = c.description || '';
+  document.getElementById('edit-price').value = c.price || 0;
+  document.getElementById('edit-original-price').value = c.original_price || 0;
+  document.getElementById('edit-level').value = c.level || 'beginner';
+  document.getElementById('edit-duration').value = c.duration || '';
+  document.getElementById('edit-lessons').value = c.total_lessons || 0;
+  document.getElementById('edit-featured').checked = c.is_featured == 1;
+  const catSel = document.getElementById('edit-category');
+  const insSel = document.getElementById('edit-instructor');
+  for (let opt of catSel.options) opt.selected = opt.value == c.category_id;
+  for (let opt of insSel.options) opt.selected = opt.value == c.instructor_id;
+  openModal('modal-edit-course');
+}
+
+// Submit edit
+document.getElementById('form-edit-course').addEventListener('submit', async e => {
+  e.preventDefault();
+  const id = document.getElementById('edit-course-id').value;
+  const btn = e.target.querySelector('[type=submit]');
+  btn.textContent = 'Đang lưu...'; btn.disabled = true;
+  const fd = new FormData(e.target);
+  if (!fd.get('is_featured')) fd.set('is_featured', '0');
+  const res = await fetch(`/admin/courses/edit/${id}`, {method:'POST', body:fd});
+  const data = await res.json();
+  showAdminToast(data.message, data.success ? 'success' : 'error');
+  if (data.success) { setTimeout(() => location.reload(), 800); }
+  btn.textContent = 'Lưu Thay Đổi'; btn.disabled = false;
+});
+
+// Delete
+let deleteCourseId = null;
+function deleteCourse(id, name) {
+  deleteCourseId = id;
+  document.getElementById('delete-course-name').textContent = `"${name}"`;
+  openModal('modal-confirm-delete');
+}
+document.getElementById('btn-confirm-delete').addEventListener('click', async () => {
+  if (!deleteCourseId) return;
+  const btn = document.getElementById('btn-confirm-delete');
+  btn.textContent = 'Đang xóa...'; btn.disabled = true;
+  const res = await fetch(`/admin/courses/delete/${deleteCourseId}`, {method:'POST'});
+  const data = await res.json();
+  showAdminToast(data.message, data.success ? 'success' : 'error');
+  if (data.success) { setTimeout(() => location.reload(), 800); }
+});
+</script>
+{% endblock %}

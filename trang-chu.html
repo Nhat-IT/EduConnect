@@ -1,0 +1,239 @@
+{% extends "layout.html" %}
+{% block title %}EduConnect – Học Nhanh, Thành Công Sớm{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/trang-chu.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="container hero-inner">
+    <div class="hero-content">
+      <div class="hero-label">🚀 Nền tảng học tập #1 Việt Nam</div>
+      <h1 class="hero-title">Học Nhanh —<br><span class="highlight">Kiếm Tiền Sớm</span></h1>
+      <p class="hero-desc">Hơn 50 khóa học chuyên sâu về Lập Trình, Marketing, SEO và Kinh Doanh Online. Học mọi lúc mọi nơi với giảng viên thực chiến.</p>
+      <div class="hero-btns">
+        <a href="{{ url_for('tat_ca_khoa_hoc') }}" class="btn-primary">Khám Phá Khóa Học →</a>
+        {% if not current_user %}
+        <button class="btn-outline" onclick="openModal('register-modal')">Đăng Ký Miễn Phí</button>
+        {% endif %}
+      </div>
+      <div class="hero-trust">
+        <div class="trust-item">✅ Cam kết hoàn tiền 30 ngày</div>
+        <div class="trust-item">✅ Học trọn đời</div>
+        <div class="trust-item">✅ Chứng chỉ hoàn thành</div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-card-main">
+        <div class="hc-icon">🎓</div>
+        <div class="hc-text">
+          <strong>Khóa học mới nhất</strong>
+          <span>Lập Trình Web 2024</span>
+        </div>
+        <div class="hc-badge">HOT</div>
+      </div>
+      <div class="hero-float hero-float--1">⭐ 4.9/5</div>
+      <div class="hero-float hero-float--2">👨‍🎓 +3K học viên</div>
+      <div class="hero-float hero-float--3">🏆 Chứng chỉ</div>
+      <div class="hero-orb hero-orb--1"></div>
+      <div class="hero-orb hero-orb--2"></div>
+    </div>
+  </div>
+
+  <!-- Search bar -->
+  <div class="container">
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="hero-search" placeholder="Tìm kiếm khóa học... (VD: SEO, Web, Marketing)" autocomplete="off">
+      <button onclick="doSearch()">Tìm Kiếm</button>
+      <div class="search-results" id="search-results"></div>
+    </div>
+    <div class="search-tags">
+      <span>Phổ biến:</span>
+      {% for cat in categories[:5] %}
+      <a href="{{ url_for('tat_ca_khoa_hoc') }}?category={{ cat.slug }}" class="search-tag">{{ cat.name }}</a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ── STATS ── -->
+<section class="section section-dark">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-card reveal">
+        <div class="stat-card__num" data-count="{{ stats.students }}" data-suffix="+">0</div>
+        <div class="stat-card__label">👨‍🎓 Học Viên Tin Tưởng</div>
+      </div>
+      <div class="stat-card reveal">
+        <div class="stat-card__num" data-count="{{ stats.courses }}" data-suffix="+">0</div>
+        <div class="stat-card__label">📚 Khóa Học Chất Lượng</div>
+      </div>
+      <div class="stat-card reveal">
+        <div class="stat-card__num" data-count="{{ stats.lessons }}" data-suffix="+">0</div>
+        <div class="stat-card__label">🎬 Video Bài Học</div>
+      </div>
+      <div class="stat-card reveal">
+        <div class="stat-card__num" data-count="{{ stats.instructors }}" data-suffix="+">0</div>
+        <div class="stat-card__label">👨‍🏫 Giảng Viên Thực Chiến</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURED COURSES ── -->
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-label">Nổi Bật</span>
+      <h2 class="section-title">Khóa Học Được Yêu Thích</h2>
+      <p class="section-sub">Được lựa chọn bởi hàng nghìn học viên và giảng viên thực chiến</p>
+    </div>
+    <div class="courses-grid">
+      {% for course in featured_courses %}
+      <div class="course-card reveal">
+        <div class="course-card__img">
+          <span>{{ ['📚','💻','📈','🎨','🚀','💡'][loop.index0 % 6] }}</span>
+        </div>
+        <div class="course-card__body">
+          <div class="course-card__category">{{ course.category_name }}</div>
+          <h3 class="course-card__title">{{ course.title }}</h3>
+          <p class="course-card__instructor">👨‍🏫 {{ course.instructor_name }}</p>
+          <div class="course-card__meta">
+            <span class="course-card__rating">⭐ {{ "%.1f"|format(course.rating) }}</span>
+            <span>🎬 {{ course.total_lessons }} bài học</span>
+            <span>👥 {{ "{:,}".format(course.total_students) }}</span>
+          </div>
+          <div class="course-card__footer">
+            <div class="price-group">
+              <span class="price-now">{{ "{:,.0f}".format(course.price) }}₫</span>
+              {% if course.original_price > course.price %}
+              <span class="price-old">{{ "{:,.0f}".format(course.original_price) }}₫</span>
+              <span class="price-badge">-{{ ((1 - course.price/course.original_price)*100)|int }}%</span>
+              {% endif %}
+            </div>
+            <a href="{{ url_for('tat_ca_khoa_hoc') }}" class="btn-card">Xem Chi Tiết</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div style="text-align:center; margin-top:40px;">
+      <a href="{{ url_for('tat_ca_khoa_hoc') }}" class="btn-outline">Xem Tất Cả Khóa Học →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── WHY CHOOSE ── -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-head center">
+      <span class="section-label">Tại Sao Chọn Chúng Tôi</span>
+      <h2 class="section-title">Học Tập Thông Minh Hơn</h2>
+      <p class="section-sub">EduConnect mang đến trải nghiệm học tập đỉnh cao với nội dung thực chiến</p>
+    </div>
+    <div class="three-col">
+      <div class="why-card reveal">
+        <div class="why-icon">🎯</div>
+        <h3>Nội Dung Thực Chiến</h3>
+        <p>Mỗi khóa học được xây dựng từ kinh nghiệm thực tế, giúp bạn áp dụng ngay vào công việc.</p>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon">⏰</div>
+        <h3>Học Mọi Lúc Mọi Nơi</h3>
+        <p>Truy cập trên mọi thiết bị – máy tính, điện thoại, máy tính bảng. Học theo tốc độ của bạn.</p>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon">💬</div>
+        <h3>Hỗ Trợ Tận Tâm</h3>
+        <p>Giảng viên và cộng đồng học viên luôn sẵn sàng giải đáp mọi thắc mắc của bạn 24/7.</p>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon">🏆</div>
+        <h3>Chứng Chỉ Hoàn Thành</h3>
+        <p>Nhận chứng chỉ được công nhận sau khi hoàn thành khóa học, tăng giá trị hồ sơ.</p>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon">💰</div>
+        <h3>Giá Cả Hợp Lý</h3>
+        <p>Chi phí tiết kiệm hơn học truyền thống đến 90%, học trọn đời không thêm phí.</p>
+      </div>
+      <div class="why-card reveal">
+        <div class="why-icon">🔄</div>
+        <h3>Cập Nhật Liên Tục</h3>
+        <p>Nội dung khóa học được cập nhật thường xuyên theo xu hướng thị trường mới nhất.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── REVIEWS ── -->
+{% if reviews %}
+<section class="section">
+  <div class="container">
+    <div class="section-head center">
+      <span class="section-label">Học Viên Nói Gì</span>
+      <h2 class="section-title">Hơn 2,000 Học Viên Tin Tưởng</h2>
+    </div>
+    <div class="reviews-grid">
+      {% for r in reviews %}
+      <div class="review-card reveal">
+        <div class="review-stars">{% for i in range(r.rating) %}⭐{% endfor %}</div>
+        <p class="review-text">"{{ r.comment }}"</p>
+        <div class="review-author">
+          <div class="review-avatar">{{ r.user_name[0] }}</div>
+          <div>
+            <div class="review-name">{{ r.user_name }}</div>
+            <div class="review-role">Học viên EduConnect</div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+      <!-- Static reviews for design -->
+      <div class="review-card reveal">
+        <div class="review-stars">⭐⭐⭐⭐⭐</div>
+        <p class="review-text">"Mình đã học nhiều khóa online nhưng EduConnect là tốt nhất. Giảng viên giải thích rất dễ hiểu!"</p>
+        <div class="review-author">
+          <div class="review-avatar">H</div>
+          <div><div class="review-name">Hoàng Văn Hùng</div><div class="review-role">Học viên khóa SEO</div></div>
+        </div>
+      </div>
+      <div class="review-card reveal">
+        <div class="review-stars">⭐⭐⭐⭐⭐</div>
+        <p class="review-text">"Sau 2 tháng học, mình đã tự xây dựng được website bán hàng riêng và ra đơn đều đặn!"</p>
+        <div class="review-author">
+          <div class="review-avatar">L</div>
+          <div><div class="review-name">Lê Thị Lan</div><div class="review-role">Học viên khóa Web</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ── CTA ── -->
+<section class="cta-section">
+  <div class="container cta-inner">
+    <div class="cta-content">
+      <h2>Sẵn Sàng Bắt Đầu Hành Trình?</h2>
+      <p>Tham gia cùng hàng nghìn học viên đang thay đổi cuộc đời với EduConnect</p>
+      <div class="cta-btns">
+        {% if current_user %}
+        <a href="{{ url_for('tat_ca_khoa_hoc') }}" class="btn-accent">Khám Phá Khóa Học →</a>
+        {% else %}
+        <button class="btn-accent" onclick="openModal('register-modal')">Đăng Ký Miễn Phí →</button>
+        {% endif %}
+      </div>
+    </div>
+    <div class="cta-emoji">🚀</div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/trang-chu.js') }}"></script>
+{% endblock %}

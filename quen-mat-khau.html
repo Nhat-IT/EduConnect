@@ -1,0 +1,108 @@
+{% extends "layout.html" %}
+{% block title %}Quên Mật Khẩu – EduConnect{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/quen-mat-khau.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+  <div class="auth-bg"></div>
+  <div class="container auth-container">
+
+    <div class="auth-card">
+      <!-- Step indicators -->
+      <div class="steps">
+        <div class="step active" id="step-ind-1">
+          <div class="step-circle">1</div>
+          <div class="step-label">Xác nhận email</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" id="step-ind-2">
+          <div class="step-circle">2</div>
+          <div class="step-label">Nhập mã OTP</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" id="step-ind-3">
+          <div class="step-circle">3</div>
+          <div class="step-label">Mật khẩu mới</div>
+        </div>
+      </div>
+
+      <!-- Step 1: Email -->
+      <div class="step-panel active" id="step-1">
+        <div class="auth-card-header">
+          <div class="auth-icon">🔐</div>
+          <h2>Quên Mật Khẩu?</h2>
+          <p>Nhập email của bạn để nhận mã OTP đặt lại mật khẩu</p>
+        </div>
+        <form id="form-step1" class="form-card">
+          <div class="form-group">
+            <label>Địa Chỉ Email</label>
+            <input type="email" id="reset-email" name="email" placeholder="email@example.com" required>
+          </div>
+          <div id="msg-1" class="form-message"></div>
+          <button type="submit" class="btn-primary full-width">Gửi Mã OTP →</button>
+        </form>
+        <div class="auth-back">
+          <a href="{{ url_for('trang_chu') }}">← Quay về trang chủ</a>
+        </div>
+      </div>
+
+      <!-- Step 2: OTP -->
+      <div class="step-panel" id="step-2">
+        <div class="auth-card-header">
+          <div class="auth-icon">📨</div>
+          <h2>Nhập Mã OTP</h2>
+          <p>Chúng tôi đã gửi mã 8 ký tự đến email của bạn</p>
+        </div>
+        <form id="form-step2" class="form-card">
+          <div class="form-group">
+            <label>Mã OTP</label>
+            <input type="text" id="otp-input" name="token" placeholder="VD: AB12CD34" maxlength="8" style="letter-spacing:0.2em; text-align:center; font-size:1.3rem; font-weight:700;" required>
+          </div>
+          <div id="msg-2" class="form-message"></div>
+          <button type="submit" class="btn-primary full-width">Xác Nhận →</button>
+        </form>
+        <p class="resend-text">Không nhận được mã? <a href="#" onclick="goStep(1)">Gửi lại</a></p>
+      </div>
+
+      <!-- Step 3: New password -->
+      <div class="step-panel" id="step-3">
+        <div class="auth-card-header">
+          <div class="auth-icon">🔑</div>
+          <h2>Tạo Mật Khẩu Mới</h2>
+          <p>Nhập mật khẩu mới cho tài khoản của bạn</p>
+        </div>
+        <form id="form-step3" class="form-card">
+          <div class="form-group">
+            <label>Mật Khẩu Mới</label>
+            <input type="password" id="new-pass" name="new_password" placeholder="Tối thiểu 6 ký tự" minlength="6" required>
+            <div class="pass-strength" id="pass-strength"></div>
+          </div>
+          <div class="form-group">
+            <label>Xác Nhận Mật Khẩu</label>
+            <input type="password" id="confirm-pass" placeholder="Nhập lại mật khẩu" required>
+          </div>
+          <div id="msg-3" class="form-message"></div>
+          <button type="submit" class="btn-primary full-width">Đặt Lại Mật Khẩu →</button>
+        </form>
+      </div>
+
+      <!-- Step 4: Success -->
+      <div class="step-panel" id="step-4">
+        <div class="success-panel">
+          <div class="success-icon">✅</div>
+          <h2>Thành Công!</h2>
+          <p>Mật khẩu của bạn đã được đặt lại thành công.</p>
+          <a href="{{ url_for('trang_chu') }}" class="btn-primary" onclick="openModal('login-modal'); return false;">Đăng Nhập Ngay →</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/quen-mat-khau.js') }}"></script>
+{% endblock %}

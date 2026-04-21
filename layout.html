@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Admin{% endblock %} — EduConnect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+</head>
+<body class="admin-body">
+
+<aside class="admin-sidebar" id="admin-sidebar">
+  <div class="sidebar-brand">
+    <span class="brand-icon">🎓</span>
+    <span class="brand-text">Edu<strong>Admin</strong></span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-group">
+      <span class="nav-group-label">Tổng Quan</span>
+      <a href="{{ url_for('admin_dashboard') }}" class="sidebar-link {% if request.endpoint=='admin_dashboard' %}active{% endif %}">
+        <span class="sl-icon">📊</span> Dashboard
+      </a>
+    </div>
+    <div class="nav-group">
+      <span class="nav-group-label">Quản Lý</span>
+      <a href="{{ url_for('admin_courses') }}" class="sidebar-link {% if request.endpoint=='admin_courses' %}active{% endif %}">
+        <span class="sl-icon">📚</span> Khóa Học
+      </a>
+      <a href="{{ url_for('admin_users') }}" class="sidebar-link {% if request.endpoint=='admin_users' %}active{% endif %}">
+        <span class="sl-icon">👥</span> Học Viên
+      </a>
+      <a href="{{ url_for('admin_categories') }}" class="sidebar-link {% if request.endpoint=='admin_categories' %}active{% endif %}">
+        <span class="sl-icon">🏷️</span> Danh Mục
+      </a>
+      <a href="{{ url_for('admin_contacts') }}" class="sidebar-link {% if request.endpoint=='admin_contacts' %}active{% endif %}">
+        <span class="sl-icon">✉️</span> Liên Hệ
+        {% set cnt = get_contact_count() %}
+        {% if cnt > 0 %}<span class="badge-nav">{{ cnt }}</span>{% endif %}
+      </a>
+    </div>
+    <div class="nav-group">
+      <span class="nav-group-label">Hệ Thống</span>
+      <a href="{{ url_for('trang_chu') }}" target="_blank" class="sidebar-link">
+        <span class="sl-icon">🌐</span> Xem Website
+      </a>
+      <a href="{{ url_for('admin_logout') }}" class="sidebar-link sidebar-logout">
+        <span class="sl-icon">🚪</span> Đăng Xuất
+      </a>
+    </div>
+  </nav>
+  <div class="sidebar-user">
+    <div class="su-avatar">{{ session.get('user_name','A')[0] }}</div>
+    <div class="su-info">
+      <strong>{{ session.get('user_name','Admin') }}</strong>
+      <span>Quản Trị Viên</span>
+    </div>
+  </div>
+</aside>
+
+<div class="admin-main" id="admin-main">
+  <header class="admin-topbar">
+    <button class="topbar-toggle" onclick="toggleSidebar()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="topbar-breadcrumb">
+      <a href="{{ url_for('admin_dashboard') }}" class="breadcrumb-home">🏠</a>
+      <span class="breadcrumb-sep">›</span>
+      <span class="topbar-title">{% block page_title %}Dashboard{% endblock %}</span>
+    </div>
+    <div class="topbar-actions">
+      <a href="{{ url_for('trang_chu') }}" target="_blank" class="topbar-btn" title="Xem website">🌐</a>
+      <a href="{{ url_for('admin_logout') }}" class="topbar-btn topbar-logout" title="Đăng xuất">🚪</a>
+    </div>
+  </header>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="admin-flashes">
+      {% for cat, msg in messages %}
+      <div class="admin-flash admin-flash-{{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endwith %}
+
+  <div class="admin-content">
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+<div class="admin-toast" id="admin-toast"></div>
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

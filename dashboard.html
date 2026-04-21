@@ -1,0 +1,140 @@
+{% extends "admin/layout.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- ── STAT CARDS ── -->
+<div class="dash-stats">
+  <div class="dash-stat-card">
+    <div class="dsc-icon" style="background:#eef2ff;">👥</div>
+    <div class="dsc-body">
+      <span class="dsc-label">Học Viên</span>
+      <strong class="dsc-num">{{ "{:,}".format(stats.total_users) }}</strong>
+      <span class="dsc-sub">+{{ stats.new_users_week }} tuần này</span>
+    </div>
+  </div>
+  <div class="dash-stat-card">
+    <div class="dsc-icon" style="background:#fef3c7;">📚</div>
+    <div class="dsc-body">
+      <span class="dsc-label">Khóa Học</span>
+      <strong class="dsc-num">{{ stats.total_courses }}</strong>
+      <span class="dsc-sub">đang hoạt động</span>
+    </div>
+  </div>
+  <div class="dash-stat-card">
+    <div class="dsc-icon" style="background:#d1fae5;">📝</div>
+    <div class="dsc-body">
+      <span class="dsc-label">Lượt Đăng Ký</span>
+      <strong class="dsc-num">{{ "{:,}".format(stats.total_enrolls) }}</strong>
+      <span class="dsc-sub">tổng cộng</span>
+    </div>
+  </div>
+  <div class="dash-stat-card">
+    <div class="dsc-icon" style="background:#fce7f3;">💰</div>
+    <div class="dsc-body">
+      <span class="dsc-label">Doanh Thu</span>
+      <strong class="dsc-num">{{ "{:,.0f}".format(stats.total_revenue / 1000000) }}M</strong>
+      <span class="dsc-sub">₫ tổng cộng</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── CHARTS ROW ── -->
+<div class="dash-grid-2">
+
+  <!-- Monthly chart -->
+  <div class="dash-card">
+    <div class="dash-card-header">
+      <h3>Đăng Ký Theo Tháng</h3>
+    </div>
+    <div class="chart-wrap">
+      {% if monthly %}
+      <div class="bar-chart">
+        {% set max_count = monthly | map(attribute='count') | max %}
+        {% for row in monthly %}
+        <div class="bar-item">
+          <div class="bar-fill-wrap">
+            <div class="bar-fill" style="height: {{ (row.count / max_count * 100) | int }}%"
+                 title="{{ row.count }} đăng ký">
+              <span class="bar-val">{{ row.count }}</span>
+            </div>
+          </div>
+          <span class="bar-label">{{ row.month[5:] }}/{{ row.month[2:4] }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-chart">Chưa có dữ liệu</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Top courses -->
+  <div class="dash-card">
+    <div class="dash-card-header">
+      <h3>Top Khóa Học</h3>
+      <a href="{{ url_for('admin_courses') }}" class="dash-card-link">Xem tất cả →</a>
+    </div>
+    <div class="top-courses-list">
+      {% for c in top_courses %}
+      <div class="tc-item">
+        <div class="tc-rank">{{ loop.index }}</div>
+        <div class="tc-info">
+          <strong>{{ c.title }}</strong>
+          <span>{{ c.category_name or '—' }} • {{ c.instructor_name or '—' }}</span>
+        </div>
+        <div class="tc-students">
+          <strong>{{ "{:,}".format(c.total_students) }}</strong>
+          <span>HV</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+<!-- ── RECENT ENROLLMENTS ── -->
+<div class="dash-card" style="margin-top: 24px;">
+  <div class="dash-card-header">
+    <h3>Đăng Ký Gần Đây</h3>
+    <a href="{{ url_for('admin_users') }}" class="dash-card-link">Xem tất cả →</a>
+  </div>
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Học Viên</th>
+          <th>Khóa Học</th>
+          <th>Học Phí</th>
+          <th>Thời Gian</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in recent_enrolls %}
+        <tr>
+          <td class="td-id">{{ e.id }}</td>
+          <td>
+            <div class="td-user">
+              <div class="td-avatar">{{ e.user_name[0] }}</div>
+              <div>
+                <strong>{{ e.user_name }}</strong>
+                <span>{{ e.user_email }}</span>
+              </div>
+            </div>
+          </td>
+          <td class="td-course">{{ e.course_title }}</td>
+          <td class="td-price">{{ "{:,.0f}".format(e.price) }}₫</td>
+          <td class="td-date">{{ e.enrolled_at[:16] if e.enrolled_at else '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="td-empty">Chưa có dữ liệu</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

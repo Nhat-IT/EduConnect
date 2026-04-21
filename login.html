@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng Nhập Admin — EduConnect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body class="admin-body">
+
+<div class="admin-login-wrap">
+  <div class="admin-login-card">
+    <div class="alc-brand">
+      <span>🎓</span>
+      <h1>EduConnect<br><span>Admin Panel</span></h1>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for cat, msg in messages %}
+        <div class="alc-alert alc-alert-{{ cat }}">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('admin_login') }}" class="alc-form">
+      <div class="alc-field">
+        <label>Email Quản Trị</label>
+        <input type="email" name="email" placeholder="admin@educonnect.vn" required autofocus>
+      </div>
+      <div class="alc-field">
+        <label>Mật Khẩu</label>
+        <div class="alc-pass-wrap">
+          <input type="password" name="password" id="admin-pass" placeholder="••••••••" required>
+          <button type="button" class="alc-eye" onclick="togglePass()">👁</button>
+        </div>
+      </div>
+      <button type="submit" class="alc-submit">Đăng Nhập →</button>
+    </form>
+
+    <div class="alc-hint">
+      <p>Demo: <code>admin@educonnect.vn</code> / <code>admin123</code></p>
+    </div>
+
+    <a href="{{ url_for('trang_chu') }}" class="alc-back">← Quay về trang chủ</a>
+  </div>
+</div>
+
+<script>
+function togglePass() {
+  const inp = document.getElementById('admin-pass');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+</script>
+</body>
+</html>

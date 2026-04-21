@@ -1,0 +1,366 @@
+{% extends "layout.html" %}
+{% block title %}Tài Khoản Của Tôi – EduConnect{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tai-khoan-cua-toi.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-hero">
+  <div class="container profile-hero-inner">
+    <div class="profile-avatar-wrap">
+      <div class="profile-avatar-big">{{ user.name[0] }}</div>
+    </div>
+    <div class="profile-hero-info">
+      <h1>{{ user.name }}</h1>
+      <p>{{ user.email }}</p>
+      <div class="profile-badges">
+        <span class="badge-profile">🎓 Thành Viên</span>
+        <span class="badge-profile">📅 {{ user.created_at[:10] if user.created_at else '2024' }}</span>
+        <span class="badge-profile">📚 {{ enrolled_courses|length }} khóa đang học</span>
+        <span class="badge-profile">🏫 {{ created_courses|length }} khóa đã tạo</span>
+      </div>
+    </div>
+    <div class="wallet-hero-box">
+      <div class="wallet-hero-label">💰 Số dư ví</div>
+      <div class="wallet-hero-amount">{{ "{:,.0f}".format(user.wallet_balance) }}₫</div>
+      <button class="btn-wallet-hero" onclick="switchTab('wallet')">Quản Lý Ví →</button>
+    </div>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container profile-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="profile-sidebar">
+      <nav class="profile-nav">
+        <a href="#courses" class="pnav-link active" data-tab="courses">
+          <span>📚</span> Khóa Học Của Tôi
+        </a>
+        <a href="#my-courses" class="pnav-link" data-tab="my-courses">
+          <span>🏫</span> Khóa Học Tôi Tạo
+        </a>
+        <a href="#wallet" class="pnav-link" data-tab="wallet">
+          <span>💳</span> Ví Của Tôi
+        </a>
+        <a href="#profile" class="pnav-link" data-tab="profile">
+          <span>👤</span> Thông Tin Cá Nhân
+        </a>
+        <a href="#security" class="pnav-link" data-tab="security">
+          <span>🔐</span> Bảo Mật
+        </a>
+        <a href="{{ url_for('logout') }}" class="pnav-link pnav-logout">
+          <span>🚪</span> Đăng Xuất
+        </a>
+      </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="profile-main">
+
+      <!-- Tab: Enrolled Courses -->
+      <div class="tab-panel active" id="tab-courses">
+        <div class="panel-header">
+          <h2>Khóa Học Đang Học</h2>
+          <a href="{{ url_for('tat_ca_khoa_hoc') }}" class="btn-primary-sm">+ Tìm Khóa Học</a>
+        </div>
+
+        {% if enrolled_courses %}
+        <div class="enrolled-list">
+          {% for course in enrolled_courses %}
+          <div class="enrolled-card">
+            <div class="enrolled-icon">
+              {{ ['📚','💻','📈','🎨','🚀','💡'][loop.index0 % 6] }}
+            </div>
+            <div class="enrolled-body">
+              <h3 class="enrolled-title">{{ course.title }}</h3>
+              <p class="enrolled-meta">👨‍🏫 {{ course.instructor_name }} • 🎬 {{ course.total_lessons }} bài học</p>
+              <div class="progress-wrap">
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: {{ course.progress }}%"></div>
+                </div>
+                <span class="progress-label">{{ course.progress }}%</span>
+              </div>
+            </div>
+            <div class="enrolled-actions">
+              <div class="enrolled-status {% if course.progress == 100 %}status-done{% elif course.progress > 0 %}status-learning{% else %}status-new{% endif %}">
+                {% if course.progress == 100 %}✅ Hoàn thành
+                {% elif course.progress > 0 %}▶️ Đang học
+                {% else %}🆕 Chưa bắt đầu{% endif %}
+              </div>
+              <a href="{{ url_for('xem_bai_hoc', lesson_id=1) }}" class="btn-continue">
+                {% if course.progress == 100 %}Ôn Tập{% else %}Tiếp Tục Học{% endif %}
+              </a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-courses">
+          <div class="empty-icon">📭</div>
+          <h3>Bạn chưa đăng ký khóa học nào</h3>
+          <p>Hãy khám phá các khóa học chất lượng cao của EduConnect!</p>
+          <a href="{{ url_for('tat_ca_khoa_hoc') }}" class="btn-primary">Khám Phá Khóa Học →</a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Tab: Created Courses -->
+      <div class="tab-panel" id="tab-my-courses">
+        <div class="panel-header">
+          <h2>Khóa Học Tôi Tạo</h2>
+          <button class="btn-primary-sm" onclick="openCreateModal()">+ Tạo Khóa Học Mới</button>
+        </div>
+
+        {% if created_courses %}
+        <div class="created-courses-list">
+          {% for c in created_courses %}
+          <div class="created-course-card">
+            <div class="cc-icon">{{ ['📚','💻','📈','🎨','🚀','💡'][loop.index0 % 6] }}</div>
+            <div class="cc-body">
+              <h3>{{ c.title }}</h3>
+              <div class="cc-meta">
+                <span>📂 {{ c.category_name or 'Chưa phân loại' }}</span>
+                <span>👥 {{ c.student_count }} học viên</span>
+                <span>💰 {{ "{:,.0f}".format(c.price) }}₫</span>
+                <span class="cc-level badge-{{ c.level }}">{{ {'beginner':'Cơ bản','intermediate':'Trung cấp','advanced':'Nâng cao'}.get(c.level,'') }}</span>
+              </div>
+            </div>
+            <div class="cc-actions">
+              <button class="btn-danger-sm" onclick="deleteCreatedCourse({{ c.id }}, '{{ c.title }}')">🗑 Xóa</button>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-courses">
+          <div class="empty-icon">🏫</div>
+          <h3>Bạn chưa tạo khóa học nào</h3>
+          <p>Chia sẻ kiến thức của bạn với hàng nghìn học viên!</p>
+          <button class="btn-primary" onclick="openCreateModal()">Tạo Khóa Học Đầu Tiên →</button>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Tab: Wallet -->
+      <div class="tab-panel" id="tab-wallet">
+        <div class="panel-header">
+          <h2>Ví Của Tôi</h2>
+        </div>
+
+        <!-- Balance Card -->
+        <div class="wallet-balance-card">
+          <div class="wallet-balance-left">
+            <div class="wallet-icon-big">💳</div>
+            <div>
+              <div class="wallet-balance-label">Số dư hiện tại</div>
+              <div class="wallet-balance-amount" id="wallet-balance-display">{{ "{:,.0f}".format(user.wallet_balance) }}₫</div>
+            </div>
+          </div>
+          <div class="wallet-actions-group">
+            <button class="wallet-btn wallet-btn-deposit" onclick="openWalletModal('deposit')">
+              ⬇️ Nạp Tiền
+            </button>
+            <button class="wallet-btn wallet-btn-withdraw" onclick="openWalletModal('withdraw')">
+              ⬆️ Rút Tiền
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick deposit amounts -->
+        <div class="wallet-quick-section">
+          <h4>Nạp nhanh</h4>
+          <div class="wallet-quick-btns">
+            <button class="quick-amount-btn" onclick="quickDeposit(100000)">100.000₫</button>
+            <button class="quick-amount-btn" onclick="quickDeposit(200000)">200.000₫</button>
+            <button class="quick-amount-btn" onclick="quickDeposit(500000)">500.000₫</button>
+            <button class="quick-amount-btn" onclick="quickDeposit(1000000)">1.000.000₫</button>
+            <button class="quick-amount-btn featured" onclick="quickDeposit(2000000)">2.000.000₫ 🔥</button>
+          </div>
+        </div>
+
+        <!-- Transaction History -->
+        <div class="txn-section">
+          <h4>Lịch Sử Giao Dịch</h4>
+          {% if wallet_txns %}
+          <div class="txn-list">
+            {% for txn in wallet_txns %}
+            <div class="txn-item">
+              <div class="txn-icon {% if txn.type == 'deposit' %}txn-in{% elif txn.type == 'withdraw' %}txn-out{% else %}txn-buy{% endif %}">
+                {% if txn.type == 'deposit' %}⬇️
+                {% elif txn.type == 'withdraw' %}⬆️
+                {% elif txn.type == 'purchase' %}🛒
+                {% else %}↩️{% endif %}
+              </div>
+              <div class="txn-body">
+                <div class="txn-desc">{{ txn.description }}</div>
+                <div class="txn-date">{{ txn.created_at[:16] }}</div>
+              </div>
+              <div class="txn-amount {% if txn.type in ['deposit','refund'] %}txn-amount-in{% else %}txn-amount-out{% endif %}">
+                {% if txn.type in ['deposit','refund'] %}+{% else %}-{% endif %}{{ "{:,.0f}".format(txn.amount) }}₫
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="empty-courses" style="padding:40px 0;">
+            <div class="empty-icon">💸</div>
+            <h3>Chưa có giao dịch nào</h3>
+            <p>Nạp tiền để bắt đầu mua khóa học!</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Tab: Profile -->
+      <div class="tab-panel" id="tab-profile">
+        <div class="panel-header">
+          <h2>Thông Tin Cá Nhân</h2>
+        </div>
+        <div class="profile-form-card">
+          <form id="profile-form" class="form-card">
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Họ và Tên</label>
+                <input type="text" name="name" value="{{ user.name }}" required>
+              </div>
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" value="{{ user.email }}" disabled>
+                <small style="color:var(--neutral-500);font-size:0.78rem;">Email không thể thay đổi</small>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Ngày Tham Gia</label>
+              <input type="text" value="{{ user.created_at[:10] if user.created_at else 'N/A' }}" disabled>
+            </div>
+            <div id="profile-msg" class="form-message"></div>
+            <button type="submit" class="btn-primary">Lưu Thay Đổi</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Tab: Security -->
+      <div class="tab-panel" id="tab-security">
+        <div class="panel-header">
+          <h2>Bảo Mật Tài Khoản</h2>
+        </div>
+        <div class="security-cards">
+          <div class="security-item">
+            <div class="security-icon">🔑</div>
+            <div class="security-body">
+              <h4>Mật Khẩu</h4>
+              <p>Bảo vệ tài khoản bằng mật khẩu mạnh</p>
+            </div>
+            <a href="{{ url_for('quen_mat_khau') }}" class="btn-outline-sm">Đổi Mật Khẩu</a>
+          </div>
+          <div class="security-item">
+            <div class="security-icon">📧</div>
+            <div class="security-body">
+              <h4>Email Đăng Ký</h4>
+              <p>{{ user.email }}</p>
+            </div>
+            <span class="verified-badge">✓ Đã xác nhận</span>
+          </div>
+          <div class="security-item danger">
+            <div class="security-icon">⚠️</div>
+            <div class="security-body">
+              <h4>Xóa Tài Khoản</h4>
+              <p>Hành động này không thể hoàn tác</p>
+            </div>
+            <button class="btn-danger" onclick="showToast('Tính năng này chưa khả dụng.', 'error')">Xóa Tài Khoản</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Modal Nạp/Rút Tiền -->
+<div class="modal-overlay" id="wallet-modal" onclick="closeModalOverlay(event,'wallet-modal')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('wallet-modal')">✕</button>
+    <div class="modal-header">
+      <h2 id="wallet-modal-title">Nạp Tiền</h2>
+      <p id="wallet-modal-sub">Nhập số tiền bạn muốn nạp vào ví</p>
+    </div>
+    <form id="wallet-form" class="modal-form">
+      <input type="hidden" id="wallet-action" value="deposit">
+      <div class="form-group">
+        <label>Số Tiền (VNĐ)</label>
+        <input type="number" id="wallet-amount" placeholder="Ví dụ: 500000" min="10000" step="1000" required>
+        <small id="wallet-hint" style="color:var(--neutral-500);font-size:0.8rem;">Tối thiểu 10.000₫ · Tối đa 50.000.000₫</small>
+      </div>
+      <div id="wallet-msg" class="form-message"></div>
+      <button type="submit" class="btn-primary full-width" id="wallet-submit-btn">Xác Nhận Nạp Tiền</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Tạo Khóa Học -->
+<div class="modal-overlay" id="create-course-modal" onclick="closeModalOverlay(event,'create-course-modal')">
+  <div class="modal-box" style="max-width:600px;">
+    <button class="modal-close" onclick="closeModal('create-course-modal')">✕</button>
+    <div class="modal-header">
+      <h2>Tạo Khóa Học Mới</h2>
+      <p>Chia sẻ kiến thức của bạn với cộng đồng EduConnect</p>
+    </div>
+    <form id="create-course-form" class="modal-form">
+      <div class="form-group">
+        <label>Tên Khóa Học *</label>
+        <input type="text" name="title" placeholder="Ví dụ: Học Python Từ Cơ Bản Đến Nâng Cao" required>
+      </div>
+      <div class="form-group">
+        <label>Mô Tả</label>
+        <textarea name="description" rows="3" placeholder="Mô tả ngắn về khóa học, nội dung sẽ học được..."></textarea>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Danh Mục</label>
+          <select name="category_id">
+            <option value="">-- Chọn danh mục --</option>
+            {% for cat in categories %}
+            <option value="{{ cat.id }}">{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Cấp Độ</label>
+          <select name="level">
+            <option value="beginner">🟢 Cơ bản</option>
+            <option value="intermediate">🟡 Trung cấp</option>
+            <option value="advanced">🔴 Nâng cao</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Học Phí (₫)</label>
+          <input type="number" name="price" placeholder="0 = Miễn phí" min="0" step="1000">
+        </div>
+        <div class="form-group">
+          <label>Giá Gốc (₫)</label>
+          <input type="number" name="original_price" placeholder="Giá trước khi giảm" min="0" step="1000">
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Thời Lượng</label>
+          <input type="text" name="duration" placeholder="Ví dụ: 20 giờ">
+        </div>
+        <div class="form-group">
+          <label>Số Bài Học</label>
+          <input type="number" name="total_lessons" placeholder="0" min="0">
+        </div>
+      </div>
+      <div id="create-course-msg" class="form-message"></div>
+      <button type="submit" class="btn-primary full-width">🚀 Tạo Khóa Học</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/tai-khoan-cua-toi.js') }}"></script>
+{% endblock %}

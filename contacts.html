@@ -1,0 +1,100 @@
+{% extends "admin/layout.html" %}
+{% block title %}Liên Hệ{% endblock %}
+{% block page_title %}Quản Lý Liên Hệ{% endblock %}
+
+{% block content %}
+<div class="admin-toolbar">
+  <span class="toolbar-info">Tổng: <strong>{{ total }}</strong> tin nhắn</span>
+</div>
+
+<div class="dash-card">
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Họ Tên</th>
+          <th>Email</th>
+          <th>Nội Dung</th>
+          <th>Thời Gian</th>
+          <th>Thao Tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in contacts %}
+        <tr>
+          <td class="td-id">{{ c.id }}</td>
+          <td><strong>{{ c.name }}</strong></td>
+          <td class="td-email">{{ c.email }}</td>
+          <td class="td-message">{{ c.message[:80] }}{% if c.message|length > 80 %}...{% endif %}</td>
+          <td class="td-date">{{ c.created_at[:16] if c.created_at else '—' }}</td>
+          <td>
+            <div class="td-actions">
+              <button class="btn-view" onclick="viewContact({{ c.id }}, `{{ c.name }}`, `{{ c.email }}`, `{{ c.message|replace('`','') }}`, `{{ c.created_at or '' }}`)" title="Xem">👁️</button>
+              <button class="btn-delete" onclick="deleteContact({{ c.id }})" title="Xóa">🗑️</button>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="td-empty">Chưa có tin nhắn liên hệ nào.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if total_pages > 1 %}
+  <div class="admin-pagination">
+    {% if page > 1 %}<a href="?page={{ page-1 }}" class="pg-btn">←</a>{% endif %}
+    {% for p in range(1, total_pages+1) %}
+      {% if p == page %}<span class="pg-btn active">{{ p }}</span>
+      {% else %}<a href="?page={{ p }}" class="pg-btn">{{ p }}</a>{% endif %}
+    {% endfor %}
+    {% if page < total_pages %}<a href="?page={{ page+1 }}" class="pg-btn">→</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- Modal view -->
+<div class="admin-modal-overlay" id="modal-view-contact" onclick="closeAdminModal(event,'modal-view-contact')">
+  <div class="admin-modal admin-modal-sm">
+    <div class="am-header">
+      <h2>✉️ Nội Dung Liên Hệ</h2>
+      <button onclick="closeModal('modal-view-contact')">✕</button>
+    </div>
+    <div class="contact-detail">
+      <div class="cd-row"><span>👤 Họ tên:</span><strong id="cv-name"></strong></div>
+      <div class="cd-row"><span>✉️ Email:</span><strong id="cv-email"></strong></div>
+      <div class="cd-row"><span>📅 Thời gian:</span><strong id="cv-date"></strong></div>
+      <div class="cd-message-wrap">
+        <span>💬 Nội dung:</span>
+        <div class="cd-message" id="cv-message"></div>
+      </div>
+    </div>
+    <div class="am-footer">
+      <button onclick="closeModal('modal-view-contact')" class="btn-admin-ghost">Đóng</button>
+      <a id="cv-reply" href="#" class="btn-admin-primary">✉️ Trả Lời Email</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function viewContact(id, name, email, message, date) {
+  document.getElementById('cv-name').textContent = name;
+  document.getElementById('cv-email').textContent = email;
+  document.getElementById('cv-date').textContent = date.slice(0,16) || '—';
+  document.getElementById('cv-message').textContent = message;
+  document.getElementById('cv-reply').href = `mailto:${email}?subject=Re: EduConnect`;
+  openModal('modal-view-contact');
+}
+
+async function deleteContact(id) {
+  if (!confirm('Xóa tin nhắn liên hệ này?')) return;
+  const res = await fetch(`/admin/contacts/delete/${id}`, {method:'POST'});
+  const data = await res.json();
+  showAdminToast(data.message, data.success ? 'success' : 'error');
+  if (data.success) setTimeout(() => location.reload(), 700);
+}
+</script>
+{% endblock %}

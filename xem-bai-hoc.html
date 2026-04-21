@@ -1,0 +1,202 @@
+{% extends "layout.html" %}
+{% block title %}{{ lesson.title }} – EduConnect{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/xem-bai-hoc.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="lesson-layout">
+
+  <!-- SIDEBAR: Danh sách bài học -->
+  <aside class="lesson-sidebar" id="lesson-sidebar">
+    <div class="ls-header">
+      <button class="ls-back" onclick="history.back()">← Quay lại</button>
+      <h3 class="ls-course-title">{{ lesson.course_title }}</h3>
+    </div>
+    <div class="ls-lessons">
+      {% for l in all_lessons %}
+      <a href="{{ url_for('xem_bai_hoc', lesson_id=l.id) }}"
+         class="ls-lesson-item {% if l.id == lesson.id %}active{% endif %}">
+        <span class="ls-num">{{ loop.index }}</span>
+        <span class="ls-title">{{ l.title }}</span>
+        {% if l.id == lesson.id %}<span class="ls-current-dot">●</span>{% endif %}
+      </a>
+      {% endfor %}
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="lesson-main">
+
+    <!-- Toggle sidebar btn (mobile) -->
+    <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleLessonSidebar()">☰ Bài học</button>
+
+    <!-- Lesson Header -->
+    <div class="lesson-header">
+      <div class="lh-breadcrumb">
+        <a href="{{ url_for('tai_khoan') }}">Tài Khoản</a>
+        <span>›</span>
+        <span>{{ lesson.course_title }}</span>
+        <span>›</span>
+        <span>Bài {{ all_lessons|selectattr('id','equalto',lesson.id)|list|first and loop.index }}</span>
+      </div>
+      <h1 class="lesson-title">{{ lesson.title }}</h1>
+      <div class="lesson-meta">
+        <span class="lm-tag">⏱ {{ lesson.duration_minutes }} phút</span>
+        {% if lesson.is_free %}<span class="lm-tag lm-free">🆓 Miễn phí</span>{% endif %}
+        {% if materials %}<span class="lm-tag">📄 {{ materials|length }} tài liệu</span>{% endif %}
+        {% if exercises %}<span class="lm-tag">✏️ {{ exercises|length }} bài tập</span>{% endif %}
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="lesson-tabs">
+      <button class="ltab active" data-ltab="materials" onclick="switchLessonTab('materials', this)">
+        📄 Tài Liệu Học
+      </button>
+      {% if exercises %}
+      <button class="ltab" data-ltab="exercises" onclick="switchLessonTab('exercises', this)">
+        ✏️ Bài Tập <span class="ltab-count">{{ exercises|length }}</span>
+      </button>
+      {% endif %}
+      <button class="ltab" data-ltab="notes" onclick="switchLessonTab('notes', this)">
+        📝 Ghi Chú
+      </button>
+    </div>
+
+    <!-- Panel: Tài liệu -->
+    <div class="ltab-panel active" id="ltab-materials">
+      {% if materials %}
+        {% for mat in materials %}
+        <div class="material-card">
+          <div class="material-card-header">
+            <div class="material-icon">
+              {% if mat.material_type == 'document' %}📄
+              {% elif mat.material_type == 'code' %}💻
+              {% else %}📎{% endif %}
+            </div>
+            <div>
+              <h3 class="material-title">{{ mat.title }}</h3>
+              <span class="material-type-tag">
+                {{ {'document':'Tài liệu đọc','code':'Code mẫu','exercise':'Bài tập'}.get(mat.material_type,'Tài liệu') }}
+              </span>
+            </div>
+            <button class="material-collapse-btn" onclick="toggleMaterial(this)">▾</button>
+          </div>
+          <div class="material-content" data-content="{{ mat.content or '' }}">
+            <div class="material-body rendered-content"></div>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+      <div class="empty-lesson-state">
+        <div class="els-icon">📭</div>
+        <h3>Chưa có tài liệu</h3>
+        <p>Tài liệu cho bài học này đang được cập nhật.</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Panel: Bài tập -->
+    {% if exercises %}
+    <div class="ltab-panel" id="ltab-exercises">
+      <div class="exercise-intro">
+        <div class="ei-icon">✏️</div>
+        <div>
+          <h3>Bài Tập Kiểm Tra</h3>
+          <p>{{ exercises|length }} câu hỏi trắc nghiệm để củng cố kiến thức vừa học</p>
+        </div>
+        <button class="btn-primary-sm" onclick="startExercise()">Bắt Đầu Làm Bài</button>
+      </div>
+
+      <div id="exercise-container">
+        {% for ex in exercises %}
+        <div class="exercise-card" id="ex-{{ ex.id }}" data-correct="{{ ex.correct_answer }}">
+          <div class="ex-header">
+            <span class="ex-num">Câu {{ loop.index }}</span>
+            <span class="ex-status" id="ex-status-{{ ex.id }}"></span>
+          </div>
+          <p class="ex-question">{{ ex.question }}</p>
+          <div class="ex-options">
+            {% for letter, text in [('A', ex.option_a), ('B', ex.option_b), ('C', ex.option_c), ('D', ex.option_d)] %}
+            {% if text %}
+            <button class="ex-opt" data-letter="{{ letter }}" onclick="selectAnswer({{ ex.id }}, '{{ letter }}', this)">
+              <span class="ex-opt-letter">{{ letter }}</span>
+              <span class="ex-opt-text">{{ text }}</span>
+            </button>
+            {% endif %}
+            {% endfor %}
+          </div>
+          {% if ex.explanation %}
+          <div class="ex-explanation hidden" id="ex-exp-{{ ex.id }}">
+            <span class="exp-icon">💡</span>
+            <div>
+              <strong>Giải thích:</strong>
+              <p>{{ ex.explanation }}</p>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+
+        <div class="exercise-result hidden" id="exercise-result">
+          <div class="result-score" id="result-score"></div>
+          <div class="result-msg" id="result-msg"></div>
+          <button class="btn-primary" onclick="retryExercise()">Làm Lại</button>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Panel: Ghi chú -->
+    <div class="ltab-panel" id="ltab-notes">
+      <div class="notes-area">
+        <div class="notes-header">
+          <h3>📝 Ghi Chú Cá Nhân</h3>
+          <button class="btn-primary-sm" onclick="saveNote()">💾 Lưu Ghi Chú</button>
+        </div>
+        <textarea class="notes-textarea" id="lesson-note" placeholder="Ghi lại những điều quan trọng từ bài học này...&#10;&#10;Ví dụ:&#10;- Khái niệm quan trọng cần nhớ&#10;- Câu hỏi cần hỏi thêm&#10;- Ý tưởng áp dụng thực tế"></textarea>
+        <div class="notes-tip">💡 Ghi chú được lưu tự động trên trình duyệt của bạn</div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="lesson-nav">
+      {% set ns = namespace(prev_id=None, next_id=None, found=False) %}
+      {% for l in all_lessons %}
+        {% if ns.found and ns.next_id is none %}{% set ns.next_id = l.id %}{% endif %}
+        {% if l.id == lesson.id %}{% set ns.found = True %}{% endif %}
+        {% if not ns.found %}{% set ns.prev_id = l.id %}{% endif %}
+      {% endfor %}
+
+      {% if ns.prev_id %}
+      <a href="{{ url_for('xem_bai_hoc', lesson_id=ns.prev_id) }}" class="lesson-nav-btn">
+        ← Bài Trước
+      </a>
+      {% else %}
+      <span class="lesson-nav-btn disabled">← Bài Trước</span>
+      {% endif %}
+
+      <button class="lesson-nav-btn complete-btn" onclick="markComplete()">
+        ✅ Đánh Dấu Hoàn Thành
+      </button>
+
+      {% if ns.next_id %}
+      <a href="{{ url_for('xem_bai_hoc', lesson_id=ns.next_id) }}" class="lesson-nav-btn lesson-nav-next">
+        Bài Tiếp Theo →
+      </a>
+      {% else %}
+      <button class="lesson-nav-btn lesson-nav-next" onclick="showToast('🎉 Bạn đã hoàn thành khóa học!', 'success')">
+        Hoàn Thành Khóa Học 🎓
+      </button>
+      {% endif %}
+    </div>
+
+  </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>const LESSON_ID = {{ lesson.id }};</script>
+<script src="{{ url_for('static', filename='js/xem-bai-hoc.js') }}"></script>
+{% endblock %}

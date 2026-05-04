@@ -1,223 +1,145 @@
-```bash
-# 🎓 EduConnect — Nền tảng học trực tuyến
+# EduConnect – Node.js
 
-EduConnect là một ứng dụng web học trực tuyến (e-learning) xây dựng bằng  Node.js + Express , sử dụng  MySQL  làm cơ sở dữ liệu và  Nunjucks  làm template engine. Hệ thống hỗ trợ hai vai trò:  Người học  và  Admin , với đầy đủ tính năng quản lý khóa học, bài học, ví điện tử và tài khoản.
+Phiên bản Node.js (Express + Nunjucks + better-sqlite3) chuyển đổi từ Python Flask.
 
-## ✨ Tính năng
-### Người dùng (User)
-- Đăng ký / Đăng nhập / Đăng xuất
-- Quên mật khẩu (gửi yêu cầu đến Admin)
-- Xem danh sách và chi tiết khóa học (lọc theo danh mục, giá, cấp độ, từ khóa)
-- Đăng ký học và theo dõi tiến trình học tập
-- Xem bài học (video, tài liệu, bài tập trắc nghiệm)
-- Đánh giá / review khóa học
-- Quản lý ví điện tử: nạp tiền, rút tiền
-- Tạo và chỉnh sửa khóa học (cho Instructor)
-- Chỉnh sửa thông tin tài khoản cá nhân
+## Cấu trúc dự án
 
-### Admin
-- Dashboard tổng quan (thống kê người dùng, khóa học, doanh thu, lượt đăng ký)
-- Quản lý người dùng (xem, tạo, khóa tài khoản, cấp lại mật khẩu)
-- Quản lý khóa học và danh mục
-- Duyệt yêu cầu nạp tiền / rút tiền
-- Xử lý yêu cầu đặt lại mật khẩu
-- Xử lý yêu cầu xóa tài khoản
-- Quản lý liên hệ từ người dùng
-
-## 🛠 Công nghệ sử dụng
-| Thành phần | Công nghệ |
-| | |
-| Runtime | Node.js |
-| Web framework | Express.js 4 |
-| Template engine | Nunjucks 3 |
-| Cơ sở dữ liệu | MySQL 8 (mysql2) |
-| Session store | express-mysql-session |
-| Xác thực mật khẩu | bcryptjs |
-| Upload file | Multer |
-| Gửi email | Nodemailer |
-| Flash message | express-flash |
-| Dev server | Nodemon |
-
-## 📁 Cấu trúc dự án
+```
 educonnect_nodejs/
 ├── src/
-│   ├── app.js                  # Entry point, cấu hình Express & Nunjucks
-│   ├── database.js             # MySQL connection pool & helper functions
-│   ├── create-admin.js         # Script tạo tài khoản admin
+│   ├── app.js                  # Entry point chính (tương đương app.py)
+│   ├── database.js             # Module SQLite (tương đương get_db())
 │   ├── middleware/
-│   │   └── auth.js             # Middleware xác thực (loginRequired, adminRequired)
+│   │   └── auth.js             # loginRequired, adminRequired (tương đương decorator Flask)
 │   └── routes/
-│       ├── public.js           # Routes công khai (trang chủ, khóa học, liên hệ)
-│       ├── auth.js             # Routes xác thực (login, register, quên mật khẩu)
-│       ├── user.js             # Routes người dùng (tài khoản, khóa học, bài học, ví)
-│       └── admin.js            # Routes admin (dashboard, quản lý hệ thống)
-├── views/
-│   ├── layout.html             # Layout chính (user)
-│   ├── trang-chu.html          # Trang chủ
-│   ├── tat-ca-khoa-hoc.html    # Danh sách khóa học
-│   ├── xem-bai-hoc.html        # Xem bài học
-│   ├── tai-khoan-cua-toi.html  # Trang tài khoản cá nhân
-│   ├── chinh-sua-khoa-hoc.html # Chỉnh sửa khóa học
-│   ├── chinh-sua-bai-hoc.html  # Chỉnh sửa bài học
-│   ├── gioi-thieu.html         # Giới thiệu
-│   ├── lien-he.html            # Liên hệ
-│   ├── quen-mat-khau.html      # Quên mật khẩu
-│   ├── doi-mat-khau.html       # Đổi mật khẩu
+│       ├── public.js           # Route công khai: /, /khoa-hoc, /search, /gioi-thieu, /lien-he
+│       ├── auth.js             # Auth: /login, /register, /logout, /quen-mat-khau
+│       ├── user.js             # User: /tai-khoan, /enroll, /xem-bai-hoc, wallet, CRUD bài học...
+│       └── admin.js            # Admin: /admin/*, dashboard, courses, users, deposits...
+├── views/                      # Templates Nunjucks (chuyển từ Jinja2 – cú pháp gần như giống nhau)
+│   ├── layout.html
+│   ├── trang-chu.html
+│   ├── tat-ca-khoa-hoc.html
+│   ├── xem-bai-hoc.html
+│   ├── chinh-sua-khoa-hoc.html
+│   ├── chinh-sua-bai-hoc.html
+│   ├── tai-khoan-cua-toi.html
+│   ├── gioi-thieu.html
+│   ├── lien-he.html
+│   ├── quen-mat-khau.html
 │   └── admin/
-│       ├── layout.html         # Layout admin
-│       ├── dashboard.html      # Dashboard admin
-│       ├── users.html          # Quản lý người dùng
-│       ├── courses.html        # Quản lý khóa học
-│       ├── categories.html     # Quản lý danh mục
-│       ├── contacts.html       # Quản lý liên hệ
-│       ├── deposit.html        # Yêu cầu nạp tiền
-│       ├── withdrawals.html    # Yêu cầu rút tiền
-│       ├── password-resets.html # Yêu cầu đặt lại mật khẩu
-│       ├── delete_requests.html # Yêu cầu xóa tài khoản
-│       └── login.html          # Đăng nhập admin
-├── public/
-│   ├── css/                    # Stylesheet từng trang
-│   ├── js/                     # JavaScript từng trang
-│   └── images/courses/         # Ảnh thumbnail khóa học (upload)
+│       ├── layout.html
+│       ├── login.html
+│       ├── dashboard.html
+│       ├── courses.html
+│       ├── users.html
+│       ├── contacts.html
+│       ├── categories.html
+│       ├── withdrawals.html
+│       ├── deposit.html
+│       └── delete_requests.html
+├── public/                     # Static files (CSS, JS, images)
+│   ├── css/
+│   ├── js/
+│   └── images/
 ├── scripts/
-│   └── migrate-passwords.js    # Script migrate hash mật khẩu
-├── database_mysql.sql          # Schema & dữ liệu mẫu MySQL
-├── .env                        # Biến môi trường (không commit)
-└── package.json
+│   └── migrate-passwords.js    # Script migrate hash mật khẩu từ Werkzeug → bcrypt
+├── elearning.db                # SQLite database (giữ nguyên)
+├── database.sql                # Schema SQL (giữ nguyên)
+├── package.json
+├── .env.example
+└── README.md
+```
 
-## 💻 Yêu cầu hệ thống
--  Node.js  >= 18
--  MySQL  >= 8.0
--  npm  >= 9
+## Yêu cầu
 
-## 🚀 Cài đặt & Chạy
-### 1. Clone / giải nén dự án
-git clone <repo-url>
-cd educonnect_nodejs
- 
-### 2. Cài đặt dependencies
+- **Node.js** >= 18.x
+- **npm** >= 9.x
+
+## Cài đặt & Chạy
+
+```bash
+# 1. Cài packages
 npm install
- 
-### 3. Tạo cơ sở dữ liệu
-Đăng nhập vào MySQL và chạy file schema:
-mysql -u root -p < database_mysql.sql
-hoặc trong MySQL client:
- sql
-CREATE DATABASE IF NOT EXISTS educonnect CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE educonnect;
-SOURCE database_mysql.sql;
- 
 
-### 4. Cấu hình biến môi trường
-Tạo file `.env` ở thư mục gốc (xem [Cấu hình môi trường](#-cấu-hình-môi-trường)).
+# 2. Tạo file .env từ example
+cp .env.example .env
 
-### 5. Tạo tài khoản Admin (lần đầu)
-node src/create-admin.js
+# 3. (Quan trọng!) Migrate mật khẩu seed data từ Werkzeug → bcrypt
+node scripts/migrate-passwords.js
 
-### 6. Khởi động server
-# Production
+# 4. Chạy server
 npm start
-
-# Development (auto-reload)
+# hoặc dev mode với auto-reload:
 npm run dev
+```
 
-Ứng dụng chạy tại: [http://localhost:5000](http://localhost:5000)  
-Admin panel: [http://localhost:5000/admin](http://localhost:5000/admin)
+Server sẽ chạy tại: **http://localhost:5000**
 
-## ⚙️ Cấu hình môi trường
-Tạo file `.env` ở thư mục gốc với nội dung sau:
- env
-# Database
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=your_password
-DB_NAME=educonnect
+## Tài khoản mặc định (sau migrate)
 
-# Server
-PORT=5000
-NODE_ENV=development
+| Tài khoản | Email | Mật khẩu |
+|-----------|-------|-----------|
+| Admin | admin@educonnect.vn | 123456 |
+| Nguyễn Văn An | an.nguyen@educonnect.vn | 123456 |
+| Trần Thị Bình | binh.tran@educonnect.vn | 123456 |
+| Lê Minh Cường | cuong.le@educonnect.vn | 123456 |
 
-# Session
-SECRET_KEY=your_very_secret_key_here
+> **Lưu ý:** Mật khẩu mặc định sau migrate là `123456`. Hãy đổi trong môi trường production.
 
-# Email (Nodemailer — tuỳ chọn)
-MAIL_HOST=smtp.gmail.com
-MAIL_PORT=587
-MAIL_USER=your_email@gmail.com
-MAIL_PASS=your_app_password
- 
-## 🗄 Cơ sở dữ liệu
-Schema MySQL gồm các bảng chính:
+## So sánh Python Flask → Node.js
 
-| Bảng | Mô tả |
-| | |
-| `users` | Tài khoản người dùng & admin, ví điện tử |
-| `categories` | Danh mục khóa học |
-| `courses` | Khóa học (tiêu đề, giá, cấp độ, instructor...) |
-| `lessons` | Bài học trong khóa học (video, thứ tự) |
-| `lesson_materials` | Tài liệu bài học (document/file) |
-| `lesson_exercises` | Bài tập trắc nghiệm của bài học |
-| `enrollments` | Lịch sử đăng ký học & tiến trình |
-| `reviews` | Đánh giá khóa học |
-| `contacts` | Tin nhắn liên hệ |
-| `deposit_requests` | Yêu cầu nạp tiền vào ví |
-| `wallet_transactions` | Lịch sử giao dịch ví (nạp/rút/mua) |
-| `password_reset_requests` | Yêu cầu đặt lại mật khẩu |
-| `delete_requests` | Yêu cầu xóa tài khoản |
-| `sessions` | Session store (tự tạo bởi express-mysql-session) |
+| Flask (Python) | Node.js (Express) |
+|---|---|
+| `Flask` | `express` |
+| `Jinja2` templates | `Nunjucks` templates (cú pháp gần như giống nhau) |
+| `sqlite3` | `better-sqlite3` (synchronous, không cần async/await) |
+| `werkzeug.security` | `bcryptjs` |
+| `session` (Flask) | `express-session` + `connect-session-file-store` |
+| `flash()` | `express-flash` |
+| `@login_required` decorator | `loginRequired` middleware |
+| `@admin_required` decorator | `adminRequired` middleware |
+| `@app.context_processor` | `res.locals` trong middleware |
+| `url_for('trang_chu')` | `url_for('trang_chu')` (map trong `app.js`) |
+| `request.form.get(...)` | `req.body.xxx` |
+| `request.args.get(...)` | `req.query.xxx` |
+| `redirect(url_for(...))` | `res.redirect(url)` |
+| `jsonify({...})` | `res.json({...})` |
+| `render_template(...)` | `res.render(...)` |
+| `werkzeug Multer` | `multer` (upload file) |
 
-## 🔗 API & Routes
-### Public
-| Method | Route | Mô tả |
-| | | |
-| GET | `/` | Trang chủ |
-| GET | `/khoa-hoc` | Danh sách khóa học (hỗ trợ filter & phân trang) |
-| GET | `/search` | Tìm kiếm khóa học (JSON) |
-| GET | `/gioi-thieu` | Trang giới thiệu |
-| GET/POST | `/lien-he` | Trang liên hệ |
+## Dependencies chính
 
-### Auth
-| Method | Route | Mô tả |
-| | | |
-| POST | `/login` | Đăng nhập (JSON) |
-| POST | `/register` | Đăng ký (JSON) |
-| GET | `/logout` | Đăng xuất |
-| GET/POST | `/quen-mat-khau` | Quên mật khẩu |
+```json
+{
+  "express": "Web framework",
+  "nunjucks": "Template engine (tương đương Jinja2)",
+  "better-sqlite3": "SQLite driver (synchronous như Python sqlite3)",
+  "bcryptjs": "Hash mật khẩu (thay Werkzeug)",
+  "express-session": "Session management",
+  "connect-session-file-store": "Lưu session vào file",
+  "express-flash": "Flash messages",
+  "multer": "Upload file ảnh",
+  "uuid": "Tạo UUID cho tên file"
+}
+```
 
-### User (yêu cầu đăng nhập)
-| Method | Route | Mô tả |
-| | | |
-| GET/POST | `/tai-khoan` | Trang tài khoản cá nhân |
-| GET | `/khoa-hoc/:slug/bai-hoc/:id` | Xem bài học |
-| POST | `/khoa-hoc/:slug/dang-ky` | Đăng ký khóa học |
-| POST | `/khoa-hoc/:slug/danh-gia` | Đánh giá khóa học |
-| GET | `/tao-khoa-hoc` | Tạo khóa học mới |
-| GET/POST | `/chinh-sua-khoa-hoc/:id` | Chỉnh sửa khóa học |
-| GET/POST | `/chinh-sua-bai-hoc/:id` | Chỉnh sửa bài học |
-| POST | `/nap-tien` | Yêu cầu nạp tiền |
-| POST | `/rut-tien` | Yêu cầu rút tiền |
+## Ghi chú kỹ thuật
 
-### Admin (yêu cầu quyền admin)
-| Method | Route | Mô tả |
-| | | |
-| GET | `/admin` | Dashboard |
-| GET | `/admin/users` | Quản lý người dùng |
-| GET | `/admin/courses` | Quản lý khóa học |
-| GET | `/admin/categories` | Quản lý danh mục |
-| GET | `/admin/contacts` | Xem liên hệ |
-| GET | `/admin/deposits` | Duyệt nạp tiền |
-| GET | `/admin/withdrawals` | Duyệt rút tiền |
-| GET | `/admin/password-resets` | Xử lý đặt lại mật khẩu |
-| GET | `/admin/delete-requests` | Xử lý xóa tài khoản |
+### Tại sao dùng better-sqlite3 (synchronous)?
 
-## 👤 Tài khoản mặc định
-Sau khi chạy `node src/create-admin.js`, tài khoản admin mặc định sẽ được tạo. Thông tin đăng nhập được cấu hình trong script đó.
-Để đăng nhập admin: [http://localhost:5000/admin/login](http://localhost:5000/admin/login)
+Python's `sqlite3` là synchronous (blocking). `better-sqlite3` cũng synchronous,
+giúp code logic trông gần giống Python nhất, không cần `async/await` khắp nơi.
 
-## 📝 Lưu ý phát triển
--  Upload ảnh khóa học : lưu tại `public/images/courses/`, tối đa 5MB, hỗ trợ JPG/PNG/GIF/WEBP.
--  Upload tài liệu bài học : lưu tại `public/uploads/materials/`, tối đa 20MB, hỗ trợ PDF/DOCX/XLSX/PPTX/ZIP và ảnh.
--  Template engine : Nunjucks với các custom filter `currency`, `date`, `rating`, `numfmt` đã được đăng ký global.
--  Session : lưu trong bảng MySQL `sessions`, thời gian hết hạn 7 ngày.
--  Windows : dự án dùng `express-mysql-session` thay vì `session-file-store` để tránh lỗi `EPERM rename` trên Windows.
+### Migrate mật khẩu
+
+Database cũ dùng Werkzeug's `scrypt` format (`scrypt:32768:8:1$...`).
+Node.js dùng `bcryptjs` — hai format này không tương thích.
+Script `migrate-passwords.js` sẽ set lại mật khẩu `123456` cho tất cả accounts cũ.
+
+### Nunjucks vs Jinja2
+
+Nunjucks được thiết kế dựa trên Jinja2 nên cú pháp gần như giống hệt:
+- `{% block %}`, `{% extends %}`, `{% for %}`, `{% if %}` — **giống nhau**
+- `{{ variable }}`, `{{ variable | filter }}` — **giống nhau**
+- Khác biệt nhỏ: `"string".split(' ')[0]` thay vì `"string".split()[0]`

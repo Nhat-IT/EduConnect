@@ -1,0 +1,147 @@
+/* ══ QUÊN MẬT KHẨU CSS ══ */
+.auth-page {
+  min-height: calc(100vh - var(--header-h));
+  background: linear-gradient(135deg, var(--brand-900) 0%, var(--brand-800) 60%, var(--brand-700) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  position: relative;
+  overflow: hidden;
+}
+.auth-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(ellipse 50% 60% at 80% 20%, rgba(72,72,200,0.25), transparent),
+    radial-gradient(ellipse 40% 50% at 10% 80%, rgba(245,158,11,0.1), transparent);
+  pointer-events: none;
+}
+.auth-container {
+  display: flex;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+.auth-card {
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  padding: 48px 44px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.4);
+}
+
+/* Steps indicator */
+.steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40px;
+  gap: 0;
+}
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.step-circle {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.9rem;
+  border: 2px solid var(--neutral-200);
+  color: var(--neutral-400);
+  background: var(--white);
+  transition: all 0.3s ease;
+}
+.step.active .step-circle,
+.step.done .step-circle {
+  background: var(--brand-500);
+  border-color: var(--brand-500);
+  color: var(--white);
+}
+.step-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--neutral-400);
+  white-space: nowrap;
+  transition: color 0.3s;
+}
+.step.active .step-label { color: var(--brand-500); }
+.step.done .step-label { color: var(--neutral-600); }
+.step-line {
+  flex: 1;
+  height: 2px;
+  background: var(--neutral-200);
+  margin: 0 8px;
+  margin-bottom: 24px;
+  transition: background 0.3s;
+  min-width: 40px;
+}
+.step-line.done { background: var(--brand-500); }
+
+/* Step panels */
+.step-panel { display: none; }
+.step-panel.active { display: block; }
+
+.auth-card-header { text-align: center; margin-bottom: 32px; }
+.auth-icon { font-size: 2.8rem; margin-bottom: 14px; line-height: 1; }
+.auth-card-header h2 { font-size: 1.7rem; font-weight: 800; margin-bottom: 8px; }
+.auth-card-header p { color: var(--neutral-500); font-size: 0.95rem; }
+
+.auth-back {
+  text-align: center;
+  margin-top: 20px;
+}
+.auth-back a {
+  font-size: 0.88rem;
+  color: var(--neutral-500);
+  transition: color var(--transition);
+}
+.auth-back a:hover { color: var(--brand-500); }
+
+.resend-text {
+  text-align: center;
+  margin-top: 18px;
+  font-size: 0.88rem;
+  color: var(--neutral-500);
+}
+.resend-text a { color: var(--brand-500); font-weight: 600; }
+
+/* Password strength */
+.pass-strength {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+}
+.pass-strength span {
+  flex: 1;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--neutral-200);
+  transition: background 0.3s;
+}
+.pass-strength.weak span:nth-child(1) { background: var(--red-500); }
+.pass-strength.medium span:nth-child(1),
+.pass-strength.medium span:nth-child(2) { background: var(--accent-500); }
+.pass-strength.strong span { background: var(--green-500); }
+
+/* Success panel */
+.success-panel {
+  text-align: center;
+  padding: 20px 0;
+}
+.success-icon { font-size: 4rem; margin-bottom: 20px; line-height: 1; }
+.success-panel h2 { font-size: 1.8rem; margin-bottom: 10px; }
+.success-panel p { color: var(--neutral-500); margin-bottom: 28px; font-size: 1rem; }
+
+@media (max-width: 768px) {
+  .auth-card { padding: 32px 24px; border-radius: var(--radius-lg); }
+  .step-label { display: none; }
+}

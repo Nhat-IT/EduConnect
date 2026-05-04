@@ -1,0 +1,400 @@
+{% extends "layout.html" %}
+{% block title %}{% if lesson %}{{ lesson.title }} – EduConnect{% else %}Khóa học – EduConnect{% endif %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/css/xem-bai-hoc.css">
+{% endblock %}
+
+{% block content %}
+
+{# ── Trường hợp khóa học chưa có bài học nào ── #}
+{% if not lesson or not all_lessons or all_lessons|length == 0 %}
+<div class="container" style="max-width:640px;margin:80px auto;text-align:center;padding:40px 24px;">
+  <div style="font-size:72px;margin-bottom:16px;">📭</div>
+  <h2 style="margin-bottom:12px;color:var(--text-primary,#1a1a2e);">Khóa học chưa có bài học</h2>
+  <p style="color:var(--text-secondary,#666);margin-bottom:32px;">
+    Giảng viên đang chuẩn bị nội dung. Vui lòng quay lại sau!
+  </p>
+  {% if is_instructor %}
+  <a href="{{ '/chinh-sua-khoa-hoc/' + course_id }}" class="btn btn-primary" style="margin-right:12px;">
+    ✏️ Thêm bài học
+  </a>
+  {% endif %}
+  <a href="/tai-khoan" class="btn btn-outline">← Về tài khoản</a>
+</div>
+{% else %}
+
+<div class="lesson-layout"
+     data-lesson-id="{{ lesson.id }}"
+     data-course-id="{{ lesson.course_id }}"
+     data-is-instructor="{{ 'true' if is_instructor else 'false' }}"
+     data-total-lessons="{{ all_lessons|length }}"
+     data-is-done-init="{{ 'true' if lesson.id in completed_lessons else 'false' }}"
+     data-progress-pct="{{ progress_pct }}">
+
+  <!-- ═══════════════════════════════
+       SIDEBAR
+  ═══════════════════════════════ -->
+  <aside class="lesson-sidebar" id="lesson-sidebar">
+
+    <!-- Header -->
+    <div class="ls-header">
+      <a href="/tai-khoan" class="ls-back">← Tài Khoản Của Tôi</a>
+      <h3 class="ls-course-title">{{ lesson.course_title }}</h3>
+      <div class="ls-lesson-count">{{ all_lessons|length }} bài học</div>
+    </div>
+
+    <!-- Tiến độ -->
+    {% if not is_instructor %}
+    <div class="course-progress-row">
+      <div class="prog-label">
+        <span>Tiến độ khóa học</span>
+        <span id="sidebar-pct">0%</span>
+      </div>
+      <div class="thin-bar">
+        <div class="thin-bar-fill" id="sidebar-bar" style="width:0%"></div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Danh sách bài học -->
+    <div class="ls-lessons">
+      {% for l in all_lessons %}
+      {% set can_view = is_instructor or is_enrolled or l.is_free %}
+      <a href="{% if can_view %}{{ '/xem-bai-hoc/' + l.id }}{% else %}#{% endif %}"
+         class="ls-lesson-item {% if l.id == lesson.id %}active{% endif %}{% if not can_view %} ls-lesson-locked{% endif %}"
+         data-lesson-id="{{ l.id }}"
+         {% if not can_view %}title="Đăng ký khóa học để mở khóa bài này"{% endif %}>
+        <span class="ls-num {% if l.id in completed_lessons %}done{% endif %}" id="ls-num-{{ l.id }}">
+          {% if l.id in completed_lessons %}✓{% else %}{{ loop.index }}{% endif %}
+        </span>
+        <span class="ls-title">{{ l.title }}</span>
+        <span class="ls-side-meta">
+          {% if l.is_free %}
+            <span class="ls-free-tag">FREE</span>
+          {% elif not can_view %}
+            <span class="ls-lock-icon" title="Cần đăng ký">🔒</span>
+          {% endif %}
+        </span>
+      </a>
+      {% endfor %}
+    </div>
+
+  </aside>
+
+  <!-- ═══════════════════════════════
+       MAIN
+  ═══════════════════════════════ -->
+  <main class="lesson-main">
+
+    <!-- Toggle sidebar (mobile) -->
+    <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleLessonSidebar()">
+      ☰ Danh sách bài
+    </button>
+
+    <!-- Breadcrumb -->
+    <div class="lh-breadcrumb">
+      <a href="/tai-khoan">Tài Khoản</a>
+      <span>›</span>
+      <a href="/tai-khoan#courses">{{ lesson.course_title }}</a>
+      <span>›</span>
+      <span>
+        {% for l in all_lessons %}{% if l.id == lesson.id %}Bài {{ loop.index }}{% endif %}{% endfor %}
+      </span>
+    </div>
+
+    <!-- Tiêu đề bài học -->
+    <div class="lesson-header">
+      <div class="lesson-title-row">
+        <h1 class="lesson-title">{{ lesson.title }}</h1>
+        {% if is_instructor %}
+        <a href="{{ '/chinh-sua-bai-hoc/' + lesson.id }}" class="lesson-edit-btn">
+          ✏️ Chỉnh sửa bài
+        </a>
+        {% endif %}
+      </div>
+      <div class="lesson-meta">
+        {% if lesson.is_free %}
+          <span class="lm-tag lm-free">🆓 Miễn phí</span>
+        {% endif %}
+        {% if materials %}
+          <span class="lm-tag">📄 {{ materials|length }} tài liệu</span>
+        {% endif %}
+        {% if exercises %}
+          <span class="lm-tag">✏️ {{ exercises|length }} bài tập</span>
+        {% endif %}
+        <span class="lm-tag" id="status-badge">📖 Đang học</span>
+      </div>
+    </div>
+
+    <!-- Giảng viên -->
+    {% if lesson.instructor_name and lesson.instructor_name|length > 0 %}
+    <div class="instructor-card">
+      <div class="instructor-avatar">{{ lesson.instructor_name | substr(0, 1) | upper }}</div>
+      <div class="instructor-info">
+        <h5>{{ lesson.instructor_name }}</h5>
+        <p>Giảng viên · {{ lesson.course_title }}</p>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Video -->
+    {% if lesson.video_url %}
+    <div class="video-wrapper">
+      {% if 'youtube.com' in lesson.video_url or 'youtu.be' in lesson.video_url %}
+      <iframe class="lesson-video"
+        src="{{ lesson.video_url | replace('watch?v=','embed/') | replace('youtu.be/','www.youtube.com/embed/') }}"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen></iframe>
+      {% else %}
+      <video controls class="lesson-video">
+        <source src="{{ lesson.video_url }}">
+        Trình duyệt không hỗ trợ video.
+      </video>
+      {% endif %}
+    </div>
+    {% else %}
+    {# Không có video → hiển thị tài liệu ngay, không cần placeholder #}
+    <div class="no-video-notice">
+      <span>📄</span> Bài học này không có video — xem tài liệu học bên dưới.
+    </div>
+    {% endif %}
+
+    <!-- ── Tabs ── -->
+    <div class="lesson-tabs">
+      <button class="ltab active" data-ltab="materials" onclick="switchLessonTab('materials', this)">
+        📄 Tài Liệu{% if materials %} <span class="ltab-count">{{ materials|length }}</span>{% endif %}
+      </button>
+      {% if exercises %}
+      <button class="ltab" data-ltab="exercises" onclick="switchLessonTab('exercises', this)">
+        ✏️ Bài Tập <span class="ltab-count">{{ exercises|length }}</span>
+      </button>
+      {% endif %}
+      <button class="ltab" data-ltab="notes" onclick="switchLessonTab('notes', this)">
+        📝 Ghi Chú
+      </button>
+      <button class="ltab" data-ltab="discuss" onclick="switchLessonTab('discuss', this)">
+        💬 Thảo Luận
+      </button>
+    </div>
+
+    <!-- ── Panel: Tài liệu ── -->
+    <div class="ltab-panel active" id="ltab-materials">
+      {% if materials %}
+        {% for mat in materials %}
+        <div class="material-card">
+          <div class="material-card-header" onclick="toggleMaterialCard(this)">
+            <div class="material-icon">
+              {% if mat.material_type == 'document' %}📄
+              {% elif mat.material_type == 'code' %}💻
+              {% else %}📎{% endif %}
+            </div>
+            <div>
+              <h3 class="material-title">{{ mat.title }}</h3>
+              <span class="material-type-tag">
+                {% if mat.material_type == 'document' %}Tài liệu đọc{% elif mat.material_type == 'code' %}Code mẫu{% elif mat.material_type == 'exercise' %}Bài tập{% else %}Tài liệu{% endif %}
+              </span>
+            </div>
+            <button class="material-collapse-btn" type="button">▾</button>
+          </div>
+          <div class="material-content" data-content="{{ mat.content or '' }}" data-url="{{ mat.url or '' }}" data-title="{{ mat.title }}">
+            <div class="material-body rendered-content"></div>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+      <div class="empty-lesson-state">
+        <div class="els-icon">📭</div>
+        <h3>Chưa có tài liệu</h3>
+        <p>Tài liệu cho bài học này đang được cập nhật.</p>
+        {% if is_instructor %}
+        <a href="{{ '/chinh-sua-bai-hoc/' + lesson.id }}" class="btn-primary add-material-btn">+ Thêm tài liệu</a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- ── Panel: Bài tập ── -->
+    {% if exercises %}
+    <div class="ltab-panel" id="ltab-exercises">
+      <div class="exercise-intro">
+        <div class="ei-icon">✏️</div>
+        <div>
+          <h3>Bài Tập Kiểm Tra</h3>
+          <p>{{ exercises|length }} câu hỏi · Điểm đạt ≥ 60%</p>
+        </div>
+        <button class="btn-primary-sm" onclick="startExercise()">Bắt Đầu Làm Bài</button>
+      </div>
+      <div id="exercise-container" style="display:none">
+        {% for ex in exercises %}
+        <div class="exercise-card" id="ex-{{ ex.id }}" data-correct="{{ ex.correct_answer }}">
+          <div class="ex-header">
+            <span class="ex-num">Câu {{ loop.index }}</span>
+            <span class="ex-status" id="ex-status-{{ ex.id }}"></span>
+          </div>
+          <p class="ex-question">{{ ex.question }}</p>
+          <div class="ex-options">
+            {% if ex.option_a %}
+            <button class="ex-opt" data-letter="A" onclick="selectAnswer({{ ex.id }}, 'A', this)">
+              <span class="ex-opt-letter">A</span>
+              <span class="ex-opt-text">{{ ex.option_a }}</span>
+            </button>
+            {% endif %}
+            {% if ex.option_b %}
+            <button class="ex-opt" data-letter="B" onclick="selectAnswer({{ ex.id }}, 'B', this)">
+              <span class="ex-opt-letter">B</span>
+              <span class="ex-opt-text">{{ ex.option_b }}</span>
+            </button>
+            {% endif %}
+            {% if ex.option_c %}
+            <button class="ex-opt" data-letter="C" onclick="selectAnswer({{ ex.id }}, 'C', this)">
+              <span class="ex-opt-letter">C</span>
+              <span class="ex-opt-text">{{ ex.option_c }}</span>
+            </button>
+            {% endif %}
+            {% if ex.option_d %}
+            <button class="ex-opt" data-letter="D" onclick="selectAnswer({{ ex.id }}, 'D', this)">
+              <span class="ex-opt-letter">D</span>
+              <span class="ex-opt-text">{{ ex.option_d }}</span>
+            </button>
+            {% endif %}
+          </div>
+          {% if ex.explanation %}
+          <div class="ex-explanation hidden" id="ex-exp-{{ ex.id }}">
+            <span class="exp-icon">💡</span>
+            <div><strong>Giải thích:</strong><p>{{ ex.explanation }}</p></div>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+
+        <div class="exercise-result hidden" id="exercise-result">
+          <div class="result-score" id="result-score"></div>
+          <div class="result-msg"  id="result-msg"></div>
+          <div class="exercise-result-actions">
+            <button class="btn-outline-sm" onclick="retryExercise()">🔁 Làm lại</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ── Panel: Ghi chú ── -->
+    <div class="ltab-panel" id="ltab-notes">
+      <div class="notes-area">
+        <div class="notes-header">
+          <h3>📝 Ghi Chú Cá Nhân</h3>
+          <div class="notes-header-right">
+            <span id="note-autosave"></span>
+            <button class="btn-primary-sm" onclick="saveNote()">💾 Lưu</button>
+          </div>
+        </div>
+        <textarea class="notes-textarea" id="lesson-note"
+          placeholder="Ghi lại những điều quan trọng từ bài học này...&#10;&#10;- Khái niệm cần nhớ&#10;- Câu hỏi cần hỏi&#10;- Ý tưởng thực tế"></textarea>
+        <div class="notes-tip">💡 Ghi chú được lưu tự động trên trình duyệt</div>
+      </div>
+    </div>
+
+    <!-- ── Panel: Thảo luận ── -->
+    <div class="ltab-panel" id="ltab-discuss">
+
+      <!-- Form đăng bình luận mới -->
+      <div class="discuss-compose">
+        <div class="discuss-avatar" id="discuss-my-avatar">?</div>
+        <div class="discuss-compose-right">
+          <textarea id="discuss-input" class="discuss-textarea"
+            placeholder="Đặt câu hỏi hoặc chia sẻ ý kiến về bài học này..."
+            rows="3" maxlength="2000"
+            oninput="discussCountChars()"></textarea>
+          <div class="discuss-compose-footer">
+            <span class="discuss-char-count" id="discuss-char-count">0 / 2000</span>
+            <button class="btn-primary-sm" onclick="postComment()">💬 Gửi bình luận</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trạng thái loading / lỗi -->
+      <div id="discuss-status" class="discuss-status"></div>
+
+      <!-- Danh sách bình luận -->
+      <div id="discuss-list" class="discuss-list">
+        <div class="discuss-loading">
+          <span class="discuss-spinner"></span> Đang tải thảo luận...
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Điều hướng bài học ── -->
+    <div class="lesson-nav">
+      {# Nunjucks không hỗ trợ namespace() — tính prev/next qua prev_lesson_id / next_lesson_id truyền từ route #}
+      {% if prev_lesson_id %}
+      <a href="{{ '/xem-bai-hoc/' + prev_lesson_id }}" class="lesson-nav-btn">← Bài Trước</a>
+      {% else %}
+      <span class="lesson-nav-btn disabled">← Bài Trước</span>
+      {% endif %}
+
+      {% if is_instructor %}
+      <span class="lesson-nav-btn disabled" style="cursor:default;opacity:0.6;" title="Giảng viên chỉ xem trước, không ghi tiến độ">
+        👁 Chế Độ Xem Trước
+      </span>
+      {% else %}
+      <button class="lesson-nav-btn complete-btn {% if lesson.id in completed_lessons %}is-done{% endif %}"
+              id="complete-btn" onclick="markComplete()">
+        {% if lesson.id in completed_lessons %}✅ Đã Hoàn Thành{% else %}☑️ Đánh Dấu Hoàn Thành{% endif %}
+      </button>
+      {% endif %}
+
+      {% if next_lesson_id %}
+      <a href="{{ '/xem-bai-hoc/' + next_lesson_id }}" class="lesson-nav-btn lesson-nav-next">
+        Bài Tiếp Theo →
+      </a>
+      {% endif %}
+    </div>
+
+  </main>
+</div>
+
+<!-- ── MODAL ĐÁNH GIÁ KHÓA HỌC ── -->
+<div class="modal-overlay" id="review-modal" onclick="closeReviewOverlay(event)">
+  <div class="modal-box review-modal-box">
+    <button class="modal-close" onclick="closeReviewModal()">✕</button>
+    <div class="review-modal-header">
+      <div class="review-modal-trophy">🏆</div>
+      <h2>Chúc Mừng Bạn Đã Hoàn Thành!</h2>
+      <p id="review-modal-course-name" class="review-modal-course"></p>
+      <p class="review-modal-sub">Hãy chia sẻ trải nghiệm của bạn để giúp các học viên khác nhé!</p>
+    </div>
+    <div class="review-form-body">
+      <div class="star-rating-wrap">
+        <p class="star-label">Đánh giá của bạn</p>
+        <div class="star-rating" id="star-rating">
+          <span class="star" data-val="1">★</span>
+          <span class="star" data-val="2">★</span>
+          <span class="star" data-val="3">★</span>
+          <span class="star" data-val="4">★</span>
+          <span class="star" data-val="5">★</span>
+        </div>
+        <p class="star-hint" id="star-hint">Chọn số sao</p>
+      </div>
+      <div class="form-group">
+        <label>Nhận xét của bạn</label>
+        <textarea id="review-comment" rows="4" placeholder="Chia sẻ điều bạn học được, điểm nổi bật của khóa học..."></textarea>
+      </div>
+      <div id="review-msg" class="form-message"></div>
+      <div class="review-modal-actions">
+        <button class="btn-primary full-width" id="review-submit-btn" onclick="submitReview()">Gửi Đánh Giá ⭐</button>
+        <button class="btn-skip" onclick="skipReview()">Bỏ qua, về tài khoản →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endif %}{# end if lesson #}
+{% endblock %}
+
+{% block extra_js %}
+{% if lesson and all_lessons and all_lessons|length > 0 %}
+<script src="/js/xem-bai-hoc.js"></script>
+{% endif %}
+{% endblock %}

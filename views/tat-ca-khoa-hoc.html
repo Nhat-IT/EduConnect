@@ -1,0 +1,188 @@
+{% extends "layout.html" %}
+{% block title %}Tất Cả Khóa Học – EduConnect{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="/css/tat-ca-khoa-hoc.css">
+{% endblock %}
+
+{% block content %}
+
+<!-- Page header -->
+<div class="page-header-courses">
+  <div class="container">
+    <h1>Tất Cả Khóa Học</h1>
+    <p>Khám phá {{ total }} khóa học chất lượng cao từ các chuyên gia hàng đầu</p>
+  </div>
+</div>
+
+<!-- Filter overlay (fixed, ngoài mọi grid) -->
+<div class="filter-overlay" id="filter-overlay" onclick="closeFilter()"></div>
+
+<section class="section">
+  <div class="container">
+
+    <!-- Toolbar -->
+    <div class="courses-toolbar">
+      <div class="toolbar-left">
+        <button class="filter-toggle" onclick="openFilter()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+          Bộ Lọc
+        </button>
+        <span class="result-count"><strong>{{ total }}</strong> khóa học</span>
+      </div>
+      <div class="toolbar-right">
+        {% if q %}<span class="active-filter">🔍 "{{ q }}" <a href="/khoa-hoc?{% if selected_category %}category={{ selected_category }}&{% endif %}{% if level %}level={{ level }}&{% endif %}{% if price_filter %}price={{ price_filter }}&{% endif %}{% if sort %}sort={{ sort }}{% endif %}">✕</a></span>{% endif %}
+        {% if selected_category %}<span class="active-filter">📂 {{ selected_category }} <a href="/khoa-hoc?{% if q %}q={{ q }}&{% endif %}{% if level %}level={{ level }}&{% endif %}{% if price_filter %}price={{ price_filter }}&{% endif %}{% if sort %}sort={{ sort }}{% endif %}">✕</a></span>{% endif %}
+        {% if level %}<span class="active-filter">📊 {% if level == 'beginner' %}Cơ bản{% elif level == 'intermediate' %}Trung cấp{% elif level == 'advanced' %}Nâng cao{% endif %} <a href="/khoa-hoc?{% if q %}q={{ q }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if price_filter %}price={{ price_filter }}&{% endif %}{% if sort %}sort={{ sort }}{% endif %}">✕</a></span>{% endif %}
+        {% if price_filter %}<span class="active-filter">💰 {{ 'Miễn phí' if price_filter=='free' else 'Có phí' }} <a href="/khoa-hoc?{% if q %}q={{ q }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if level %}level={{ level }}&{% endif %}{% if sort %}sort={{ sort }}{% endif %}">✕</a></span>{% endif %}
+      </div>
+    </div>
+
+    <div class="courses-layout">
+
+      <!-- FILTER SIDEBAR -->
+      <aside class="filter-sidebar" id="filter-sidebar">
+        <div class="filter-header-mobile">
+          <h3>Bộ Lọc</h3>
+          <button onclick="closeFilter()">✕</button>
+        </div>
+        <form id="filter-form" method="GET" action="/khoa-hoc">
+          <div class="filter-section">
+            <h4>🔍 Tìm Kiếm</h4>
+            <div class="filter-search">
+              <input type="text" name="q" value="{{ q }}" placeholder="Tên khóa học...">
+            </div>
+          </div>
+          <div class="filter-section">
+            <h4>📂 Danh Mục</h4>
+            <div class="filter-options">
+              <label class="filter-opt"><input type="radio" name="category" value="" {% if not selected_category %}checked{% endif %}><span>Tất cả</span></label>
+              {% for cat in categories %}
+              <label class="filter-opt"><input type="radio" name="category" value="{{ cat.slug }}" {% if selected_category==cat.slug %}checked{% endif %}><span>{{ cat.name }}</span></label>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="filter-section">
+            <h4>📊 Cấp Độ</h4>
+            <div class="filter-options">
+              <label class="filter-opt"><input type="radio" name="level" value="" {% if not level %}checked{% endif %}><span>Tất cả</span></label>
+              <label class="filter-opt"><input type="radio" name="level" value="beginner" {% if level=='beginner' %}checked{% endif %}><span>🟢 Cơ bản</span></label>
+              <label class="filter-opt"><input type="radio" name="level" value="intermediate" {% if level=='intermediate' %}checked{% endif %}><span>🟡 Trung cấp</span></label>
+              <label class="filter-opt"><input type="radio" name="level" value="advanced" {% if level=='advanced' %}checked{% endif %}><span>🔴 Nâng cao</span></label>
+            </div>
+          </div>
+          <div class="filter-section">
+            <h4>💰 Học Phí</h4>
+            <div class="filter-options">
+              <label class="filter-opt"><input type="radio" name="price" value="" {% if not price_filter %}checked{% endif %}><span>Tất cả</span></label>
+              <label class="filter-opt"><input type="radio" name="price" value="free" {% if price_filter=='free' %}checked{% endif %}><span>Miễn phí</span></label>
+              <label class="filter-opt"><input type="radio" name="price" value="paid" {% if price_filter=='paid' %}checked{% endif %}><span>Có phí</span></label>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary full-width">Áp Dụng Bộ Lọc</button>
+          <a href="/khoa-hoc" class="btn-clear">Xóa tất cả bộ lọc</a>
+        </form>
+      </aside>
+
+      <!-- COURSES MAIN -->
+      <div class="courses-main">
+        {% if courses %}
+        <div class="courses-grid-kh">
+          {% for course in courses %}
+          <div class="course-card">
+            <div class="course-card__img">
+              {% if course.image %}
+              <img src="{{ course.image }}" alt="{{ course.title }}">
+              {% endif %}
+              <span style="{% if course.image %}display:none{% endif %}">{{ ['📚','💻','📈','🎨','🚀','💡'][loop.index0 % 6] }}</span>
+            </div>
+            <div class="course-card__body">
+              <div class="card-top-row">
+                <span class="course-card__category">{{ course.category_name }}</span>
+                <span class="badge badge-{{ course.level }}">{% if course.level == 'beginner' %}Cơ bản{% elif course.level == 'intermediate' %}Trung cấp{% elif course.level == 'advanced' %}Nâng cao{% else %}{{ course.level }}{% endif %}</span>
+              </div>
+              <h3 class="course-card__title">{{ course.title }}</h3>
+              <p class="course-card__instructor">👨‍🏫 {{ course.instructor_name }}</p>
+              <div class="course-card__meta">
+                <span class="course-card__rating">⭐ {{ course.rating | rating }}</span>
+                <span>🎬 {{ course.total_lessons }} bài</span>
+                <span>👥 {{ course.total_students | numfmt }}</span>
+              </div>
+              <p class="course-desc">{{ (course.description or '') | truncate(90, false, '') }}{% if course.description and course.description|length > 90 %}...{% endif %}</p>
+              <div class="course-card__footer">
+                <div class="price-group">
+                  <span class="price-now">{{ course.price | numfmt }}₫</span>
+                  {% if course.original_price and course.original_price > course.price %}
+                  <span class="price-old">{{ course.original_price | numfmt }}₫</span>
+                  <span class="price-badge">-{{ ((1 - course.price/course.original_price)*100)|int }}%</span>
+                  {% endif %}
+                </div>
+                {% if not current_user %}
+                <button class="btn-card" onclick="openModal('login-modal')">Đăng Ký</button>
+                {% elif course.id in created_ids %}
+                <button class="btn-card btn-card-own" disabled title="Đây là khóa học của bạn">🏫 Của Bạn</button>
+                {% elif course.id in enrolled_ids %}
+                {% set cid = course.id %}
+                {% set fid = first_lesson_ids[cid] %}
+                {% set lid = last_lesson_ids[cid] %}
+                {% set prog = enrollment_progress[cid] %}
+                {% if prog == 100 %}
+                  {% if lid %}
+                  <a href="{{ '/xem-bai-hoc/' + lid }}" class="btn-card btn-card-completed">✅ Ôn Tập</a>
+                  {% elif fid %}
+                  <a href="{{ '/xem-bai-hoc/' + fid }}" class="btn-card btn-card-completed">✅ Ôn Tập</a>
+                  {% else %}
+                  <a href="/tai-khoan#courses" class="btn-card btn-card-completed">✅ Ôn Tập</a>
+                  {% endif %}
+                {% elif fid %}
+                <a href="{{ '/xem-bai-hoc/' + (lid if lid else fid) }}" class="btn-card btn-card-enrolled">▶ Tiếp Tục Học</a>
+                {% else %}
+                <a href="/tai-khoan#courses" class="btn-card btn-card-enrolled">▶ Vào Học</a>
+                {% endif %}
+                {% else %}
+                <button class="btn-card" onclick="enrollCourse({{ course.id }}, this)">Đăng Ký Ngay</button>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        {% if total_pages > 1 %}
+        <div class="pagination">
+          {% if page > 1 %}
+          <a href="?page={{ page-1 }}&q={{ q }}&category={{ selected_category }}&level={{ level }}&price={{ price_filter }}" class="page-btn">←</a>
+          {% else %}
+          <span class="page-btn disabled">←</span>
+          {% endif %}
+          {% for p in range(1, total_pages+1) %}
+            {% if p == page %}<span class="page-btn active">{{ p }}</span>
+            {% elif p == 1 or p == total_pages or (p >= page-2 and p <= page+2) %}<a href="?page={{ p }}&q={{ q }}&category={{ selected_category }}&level={{ level }}&price={{ price_filter }}" class="page-btn">{{ p }}</a>
+            {% elif p == page-3 or p == page+3 %}<span class="page-btn disabled" style="border:none;">…</span>
+            {% endif %}
+          {% endfor %}
+          {% if page < total_pages %}
+          <a href="?page={{ page+1 }}&q={{ q }}&category={{ selected_category }}&level={{ level }}&price={{ price_filter }}" class="page-btn">→</a>
+          {% else %}
+          <span class="page-btn disabled">→</span>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="no-results">
+          <div class="no-results-icon">🔍</div>
+          <h3>Không tìm thấy khóa học nào</h3>
+          <p>Thử thay đổi từ khóa hoặc xóa bộ lọc để xem thêm.</p>
+          <a href="/khoa-hoc" class="btn-primary">Xem Tất Cả</a>
+        </div>
+        {% endif %}
+      </div><!-- end .courses-main -->
+
+    </div><!-- end .courses-layout -->
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/js/tat-ca-khoa-hoc.js"></script>
+{% endblock %}

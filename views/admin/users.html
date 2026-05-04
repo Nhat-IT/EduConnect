@@ -1,0 +1,248 @@
+{% extends "admin/layout.html" %}
+{% block title %}Quản Lý Học Viên{% endblock %}
+{% block page_title %}Quản Lý Học Viên{% endblock %}
+
+{% block content %}
+<div class="admin-toolbar">
+  <form method="GET" class="toolbar-search">
+    <input type="text" name="q" value="{{ q }}" placeholder="Tìm tên hoặc email...">
+    <button type="submit">🔍</button>
+    {% if q %}<a href="/admin/users" class="clear-search">✕</a>{% endif %}
+  </form>
+  <span class="toolbar-info">Tổng: <strong>{{ total }}</strong> học viên</span>
+</div>
+
+<div class="dash-card">
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Học Viên</th>
+          <th>Email</th>
+          <th>Khóa Học</th>
+          <th>Ngày Tham Gia</th>
+          <th>Thao Tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td class="td-id">{{ u.id }}</td>
+          <td>
+            <div class="td-user">
+              <div class="td-avatar">{{ u.name[0] }}</div>
+              <strong>{{ u.name }}</strong>
+            </div>
+          </td>
+          <td class="td-email">{{ u.email }}</td>
+          <td><span class="badge-enroll">{{ u.enroll_count }} khóa</span></td>
+          <td class="td-date">{{ u.created_at | date if u.created_at else '—' }}</td>
+          <td>
+            <div class="td-actions">
+              <button class="btn-view" onclick="viewUser({{ u.id }})" title="Chi tiết">👁️</button>
+              <button class="btn-add-balance" onclick="openAddBalance({{ u.id }}, '{{ u.name|replace("'","\\'") }}')" title="Cộng tiền vào ví">➕</button>
+              <button class="btn-delete" onclick="deleteUser({{ u.id }}, '{{ u.name|replace("'","\\'") }}')" title="Xóa">🗑️</button>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="td-empty">Không tìm thấy học viên nào.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if total_pages > 1 %}
+  <div class="admin-pagination">
+    {% if page > 1 %}<a href="?page={{ page-1 }}&q={{ q }}" class="pg-btn">←</a>{% endif %}
+    {% for p in range(1, total_pages+1) %}
+      {% if p == page %}<span class="pg-btn active">{{ p }}</span>
+      {% elif p == 1 or p == total_pages or (p >= page-2 and p <= page+2) %}<a href="?page={{ p }}&q={{ q }}" class="pg-btn">{{ p }}</a>{% endif %}
+    {% endfor %}
+    {% if page < total_pages %}<a href="?page={{ page+1 }}&q={{ q }}" class="pg-btn">→</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- Modal view user -->
+<div class="admin-modal-overlay" id="modal-view-user" onclick="closeAdminModal(event,'modal-view-user')">
+  <div class="admin-modal">
+    <div class="am-header">
+      <h2>👤 Chi Tiết Học Viên</h2>
+      <button onclick="closeModal('modal-view-user')">✕</button>
+    </div>
+    <div id="user-detail-body" class="am-detail-body">
+      <div class="detail-loading">Đang tải...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Add Balance -->
+<div class="admin-modal-overlay" id="modal-add-balance" onclick="closeAdminModal(event,'modal-add-balance')">
+  <div class="admin-modal admin-modal-sm">
+    <div class="am-header">
+      <h2>➕ Cộng Tiền Vào Ví</h2>
+      <button onclick="closeModal('modal-add-balance')">✕</button>
+    </div>
+    <div class="am-form" style="padding:20px 24px;">
+      <p style="margin:0 0 16px;font-size:.9rem;color:var(--a-text-muted);">
+        Học viên: <strong id="add-balance-name" style="color:var(--a-text);"></strong>
+      </p>
+      <div class="am-field">
+        <label style="font-size:.85rem;font-weight:600;display:block;margin-bottom:6px;">Số tiền cộng (₫) *</label>
+        <input type="number" id="add-balance-amount" min="1000" step="1000" placeholder="Vd: 500000"
+               style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--a-border);background:var(--a-bg);color:var(--a-text);font-size:.95rem;">
+        <!-- Quick pick buttons -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">
+          {% for amt in [50000, 100000, 200000, 500000, 1000000] %}
+          <button type="button" onclick="document.getElementById('add-balance-amount').value={{ amt }}"
+                  style="padding:4px 10px;border-radius:6px;border:1px solid var(--a-border);background:var(--a-card);color:var(--a-text);cursor:pointer;font-size:.78rem;transition:background .2s;"
+                  onmouseover="this.style.background='var(--a-primary)';this.style.color='#fff'"
+                  onmouseout="this.style.background='var(--a-card)';this.style.color='var(--a-text)'">
+            +{{ amt | numfmt }}₫
+          </button>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="am-field" style="margin-top:14px;">
+        <label style="font-size:.85rem;font-weight:600;display:block;margin-bottom:6px;">Ghi chú</label>
+        <input type="text" id="add-balance-note" placeholder="Vd: Cộng bù giao dịch lỗi"
+               style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--a-border);background:var(--a-bg);color:var(--a-text);font-size:.88rem;">
+      </div>
+      <div id="msg-add-balance" class="am-msg" style="margin-top:10px;"></div>
+    </div>
+    <div class="am-footer">
+      <button onclick="closeModal('modal-add-balance')" class="btn-admin-ghost">Hủy</button>
+      <button id="btn-confirm-add-balance" class="btn-admin-primary">➕ Cộng Tiền</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal confirm delete -->
+<div class="admin-modal-overlay" id="modal-confirm-delete-user" onclick="closeAdminModal(event,'modal-confirm-delete-user')">
+  <div class="admin-modal admin-modal-sm">
+    <div class="am-header">
+      <h2>⚠️ Xác Nhận Xóa</h2>
+      <button onclick="closeModal('modal-confirm-delete-user')">✕</button>
+    </div>
+    <div class="am-confirm-body">
+      <p>Xóa học viên: <strong id="delete-user-name"></strong>?</p>
+      <p class="am-warning">⚠️ Tất cả lịch sử học sẽ bị xóa và không thể khôi phục!</p>
+    </div>
+    <div class="am-footer">
+      <button onclick="closeModal('modal-confirm-delete-user')" class="btn-admin-ghost">Hủy</button>
+      <button id="btn-confirm-delete-user" class="btn-admin-danger">Xóa Học Viên</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+.btn-add-balance {
+  background: rgba(34,197,94,.12);
+  color: #16a34a;
+  border: none;
+  padding: 6px 9px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background .2s;
+}
+.btn-add-balance:hover { background: rgba(34,197,94,.28); }
+</style>
+<script>
+// View user detail
+async function viewUser(id) {
+  document.getElementById('user-detail-body').innerHTML = '<div class="detail-loading">Đang tải...</div>';
+  openModal('modal-view-user');
+  const res = await fetch(`/admin/users/get/${id}`);
+  const data = await res.json();
+  const u = data.user;
+  const enrolls = data.enrollments;
+  document.getElementById('user-detail-body').innerHTML = `
+    <div class="user-detail-card">
+      <div class="udc-avatar">${u.name[0]}</div>
+      <div class="udc-info">
+        <h3>${u.name}</h3>
+        <p>${u.email}</p>
+        <span>Tham gia: ${u.created_at ? u.created_at.slice(0,10) : '—'}</span>
+      </div>
+    </div>
+    <h4 style="margin:20px 0 12px;font-size:.9rem;text-transform:uppercase;letter-spacing:.08em;color:var(--a-text-muted);">
+      Khóa Học Đã Đăng Ký (${enrolls.length})
+    </h4>
+    ${enrolls.length ? `
+    <div class="enrolls-list">
+      ${enrolls.map(e => `
+        <div class="enroll-item">
+          <span class="ei-title">${e.title}</span>
+          <div class="ei-meta">
+            <span>${e.enrolled_at ? e.enrolled_at.slice(0,10) : ''}</span>
+            <span class="ei-progress">${e.progress}% hoàn thành</span>
+          </div>
+        </div>`).join('')}
+    </div>` : '<p class="am-empty-note">Học viên chưa đăng ký khóa học nào.</p>'}
+  `;
+}
+
+// Add balance
+let addBalanceUserId = null;
+function openAddBalance(id, name) {
+  addBalanceUserId = id;
+  document.getElementById('add-balance-name').textContent = name;
+  document.getElementById('add-balance-amount').value = '';
+  document.getElementById('add-balance-note').value = '';
+  document.getElementById('msg-add-balance').textContent = '';
+  document.getElementById('msg-add-balance').className = 'am-msg';
+  openModal('modal-add-balance');
+}
+
+document.getElementById('btn-confirm-add-balance').addEventListener('click', async () => {
+  if (!addBalanceUserId) return;
+  const amount = document.getElementById('add-balance-amount').value;
+  const note   = document.getElementById('add-balance-note').value;
+  const msgEl  = document.getElementById('msg-add-balance');
+  if (!amount || parseFloat(amount) <= 0) {
+    msgEl.textContent = 'Vui lòng nhập số tiền hợp lệ.';
+    msgEl.className = 'am-msg am-msg-error';
+    return;
+  }
+  const btn = document.getElementById('btn-confirm-add-balance');
+  btn.textContent = 'Đang cộng...'; btn.disabled = true;
+  const fd = new FormData();
+  fd.append('amount', amount);
+  fd.append('note', note);
+  const res  = await fetch(`/admin/users/add-balance/${addBalanceUserId}`, { method: 'POST', body: fd });
+  const data = await res.json();
+  if (data.success) {
+    msgEl.textContent = data.message + (data.new_balance !== undefined ? ` (Số dư mới: ${data.new_balance.toLocaleString('vi-VN')}₫)` : '');
+    msgEl.className = 'am-msg am-msg-success';
+    setTimeout(() => closeModal('modal-add-balance'), 1800);
+  } else {
+    msgEl.textContent = data.message;
+    msgEl.className = 'am-msg am-msg-error';
+  }
+  btn.textContent = '➕ Cộng Tiền'; btn.disabled = false;
+});
+
+// Delete user
+let deleteUserId = null;
+function deleteUser(id, name) {
+  deleteUserId = id;
+  document.getElementById('delete-user-name').textContent = name;
+  openModal('modal-confirm-delete-user');
+}
+document.getElementById('btn-confirm-delete-user').addEventListener('click', async () => {
+  if (!deleteUserId) return;
+  const btn = document.getElementById('btn-confirm-delete-user');
+  btn.textContent = 'Đang xóa...'; btn.disabled = true;
+  const res = await fetch(`/admin/users/delete/${deleteUserId}`, { method: 'POST' });
+  const data = await res.json();
+  showAdminToast(data.message, data.success ? 'success' : 'error');
+  if (data.success) setTimeout(() => location.reload(), 800);
+  else { btn.textContent = 'Xóa Học Viên'; btn.disabled = false; }
+});
+</script>
+{% endblock %}

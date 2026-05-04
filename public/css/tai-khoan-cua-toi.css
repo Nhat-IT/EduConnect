@@ -1,0 +1,602 @@
+/* ══ TÀI KHOẢN CSS ══ */
+.profile-hero {
+  background: linear-gradient(135deg, var(--brand-900), var(--brand-700));
+  color: var(--white);
+  padding: 48px 0;
+}
+.profile-hero-inner {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+.profile-avatar-big {
+  width: 90px; height: 90px;
+  background: var(--brand-500);
+  border: 4px solid rgba(255,255,255,0.2);
+  color: var(--white);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.profile-hero-info h1 { color: var(--white); font-size: 1.8rem; margin-bottom: 4px; }
+.profile-hero-info > p { color: var(--brand-300); font-size: 0.95rem; margin-bottom: 14px; }
+.profile-badges { display: flex; gap: 10px; flex-wrap: wrap; }
+.badge-profile {
+  padding: 5px 12px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 100px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--brand-200);
+}
+
+/* Layout */
+.profile-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+/* Sidebar nav */
+.profile-sidebar {
+  position: sticky;
+  top: calc(var(--header-h) + 20px);
+}
+.profile-nav {
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.pnav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--neutral-700);
+  border-left: 3px solid transparent;
+  transition: var(--transition);
+}
+.pnav-link:hover { background: var(--neutral-50); color: var(--brand-600); }
+.pnav-link.active {
+  background: var(--brand-100);
+  color: var(--brand-600);
+  border-left-color: var(--brand-500);
+}
+.pnav-logout { color: var(--red-500); }
+.pnav-logout:hover { background: #fee2e2; color: var(--red-500); }
+
+/* Tab panels */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--neutral-200);
+}
+.panel-header h2 { font-size: 1.4rem; }
+
+/* Enrolled courses */
+.enrolled-list { display: flex; flex-direction: column; gap: 16px; }
+.enrolled-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 20px 24px;
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+}
+.enrolled-card:hover { border-color: var(--brand-300); box-shadow: var(--shadow-sm); }
+.enrolled-icon {
+  width: 56px; height: 56px;
+  background: var(--brand-100);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+.enrolled-body { flex: 1; min-width: 0; }
+.enrolled-title {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--neutral-900);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.enrolled-meta { font-size: 0.8rem; color: var(--neutral-500); margin-bottom: 10px; }
+.progress-wrap { display: flex; align-items: center; gap: 10px; }
+.progress-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--neutral-200);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--brand-500), var(--brand-400));
+  border-radius: 6px;
+  transition: width 0.8s ease;
+}
+.progress-label { font-size: 0.78rem; font-weight: 700; color: var(--brand-500); width: 32px; text-align: right; }
+.enrolled-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; flex-shrink: 0; }
+.enrolled-status {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 100px;
+  white-space: nowrap;
+}
+.status-done { background: #d1fae5; color: #065f46; }
+.status-learning { background: var(--brand-100); color: var(--brand-600); }
+.status-new { background: var(--neutral-100); color: var(--neutral-600); }
+.btn-continue {
+  padding: 8px 16px;
+  background: var(--brand-500);
+  color: var(--white);
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.82rem;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+.btn-continue:hover { background: var(--brand-600); }
+
+/* Empty state */
+.empty-courses { text-align: center; padding: 60px 24px; }
+.empty-icon { font-size: 4rem; margin-bottom: 20px; }
+.empty-courses h3 { font-size: 1.2rem; margin-bottom: 8px; }
+.empty-courses p { color: var(--neutral-500); margin-bottom: 24px; }
+
+/* Profile form */
+.profile-form-card {
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-md);
+  padding: 32px;
+}
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+/* Security */
+.security-cards { display: flex; flex-direction: column; gap: 16px; }
+.security-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-md);
+}
+.security-item.danger { border-color: #fecaca; background: #fff5f5; }
+.security-icon { font-size: 1.5rem; flex-shrink: 0; }
+.security-body { flex: 1; }
+.security-body h4 { font-weight: 700; font-size: 0.9rem; margin-bottom: 2px; }
+.security-body p { font-size: 0.82rem; color: var(--neutral-500); }
+.verified-badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 5px 12px;
+  background: #d1fae5;
+  color: #065f46;
+  border-radius: 100px;
+  flex-shrink: 0;
+}
+.btn-danger {
+  padding: 8px 18px;
+  background: var(--red-500);
+  color: var(--white);
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+.btn-danger:hover { background: #dc2626; }
+
+@media (max-width: 1024px) {
+  .profile-layout { grid-template-columns: 1fr; }
+  .profile-sidebar { position: static; }
+
+  /* ── Pipeline dropdown (mobile/tablet) ── */
+  .profile-nav {
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+  }
+  .pnav-link {
+    border-left: 3px solid transparent;
+    border-bottom: none;
+    white-space: normal;
+  }
+  .pnav-link.active {
+    border-bottom-color: transparent;
+    border-left-color: var(--brand-500);
+  }
+
+  /* Collapsed pipeline trigger */
+  .profile-nav-mobile-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--white);
+    border: 1px solid var(--neutral-200);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: var(--brand-600);
+    user-select: none;
+  }
+  .profile-nav-mobile-trigger .trigger-arrow {
+    transition: transform 0.25s ease;
+    font-size: 0.75rem;
+    color: var(--neutral-400);
+  }
+  .profile-nav-mobile-trigger.open .trigger-arrow {
+    transform: rotate(180deg);
+  }
+
+  /* Dropdown panel */
+  .profile-nav {
+    display: none;
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    border: 1px solid var(--neutral-200);
+    border-top: none;
+    overflow: hidden;
+  }
+  .profile-nav.open { display: flex; }
+}
+@media (max-width: 768px) {
+  .enrolled-card { flex-direction: column; align-items: flex-start; }
+  .enrolled-actions { flex-direction: row; width: 100%; }
+  .form-row-2 { grid-template-columns: 1fr; }
+  .security-item { flex-wrap: wrap; }
+  .profile-hero-inner { flex-direction: column; text-align: center; }
+  .profile-badges { justify-content: center; }
+}
+
+/* ══ WALLET STYLES ══ */
+.wallet-hero-box {
+  margin-left: auto;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: var(--radius-md);
+  padding: 20px 28px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  min-width: 200px;
+}
+.wallet-hero-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--brand-300);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+.wallet-hero-amount {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--white);
+  margin-bottom: 12px;
+}
+.btn-wallet-hero {
+  display: inline-block;
+  padding: 7px 16px;
+  background: var(--accent-500);
+  color: var(--neutral-900);
+  border-radius: 100px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: var(--transition);
+}
+.btn-wallet-hero:hover { background: var(--accent-400); transform: translateY(-1px); }
+
+.wallet-balance-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  background: linear-gradient(135deg, var(--brand-700), var(--brand-500));
+  border-radius: var(--radius-md);
+  padding: 28px 32px;
+  margin-bottom: 28px;
+  box-shadow: var(--shadow-brand);
+  flex-wrap: wrap;
+}
+.wallet-balance-left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.wallet-icon-big {
+  width: 56px; height: 56px;
+  background: rgba(255,255,255,0.15);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+}
+.wallet-balance-label {
+  font-size: 0.83rem;
+  color: var(--brand-200);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.wallet-balance-amount {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--white);
+}
+.wallet-actions-group { display: flex; gap: 12px; }
+.wallet-btn {
+  padding: 12px 22px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: 2px solid transparent;
+  font-family: inherit;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.wallet-btn-deposit {
+  background: #10b981;
+  color: var(--white);
+  border-color: #10b981;
+}
+.wallet-btn-deposit:hover { background: #059669; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16,185,129,0.4); }
+.wallet-btn-withdraw {
+  background: rgba(255,255,255,0.1);
+  color: var(--white);
+  border-color: rgba(255,255,255,0.3);
+}
+.wallet-btn-withdraw:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
+
+.wallet-quick-section { margin-bottom: 32px; }
+.wallet-quick-section h4 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--neutral-600);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 12px;
+}
+.wallet-quick-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+.quick-amount-btn {
+  padding: 9px 18px;
+  border: 2px solid var(--neutral-200);
+  border-radius: 100px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--neutral-700);
+  cursor: pointer;
+  background: var(--white);
+  font-family: inherit;
+  transition: var(--transition);
+}
+.quick-amount-btn:hover {
+  border-color: var(--brand-400);
+  color: var(--brand-600);
+  background: var(--brand-100);
+}
+.quick-amount-btn.featured {
+  border-color: var(--accent-400);
+  background: #fffbeb;
+  color: #92400e;
+}
+.quick-amount-btn.featured:hover {
+  background: var(--accent-400);
+  color: var(--neutral-900);
+}
+
+.txn-section h4 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--neutral-600);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 16px;
+}
+.txn-list { display: flex; flex-direction: column; gap: 10px; }
+.txn-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+.txn-item:hover { box-shadow: var(--shadow-sm); border-color: var(--neutral-300); }
+.txn-icon {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.txn-in { background: #d1fae5; }
+.txn-out { background: #fee2e2; }
+.txn-buy { background: var(--brand-100); }
+.txn-desc { font-weight: 600; font-size: 0.9rem; color: var(--neutral-800); margin-bottom: 2px; }
+.txn-date { font-size: 0.78rem; color: var(--neutral-400); }
+.txn-amount {
+  margin-left: auto;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+.txn-amount-in { color: #059669; }
+.txn-amount-out { color: var(--red-500); }
+
+/* ══ CREATED COURSES STYLES ══ */
+.created-courses-list { display: flex; flex-direction: column; gap: 14px; }
+.created-course-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 22px;
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+}
+.created-course-card:hover { box-shadow: var(--shadow-sm); border-color: var(--neutral-300); }
+.cc-icon {
+  font-size: 1.8rem;
+  width: 72px; height: 52px;
+  min-width: 72px;
+  background: linear-gradient(135deg, var(--brand-100), var(--brand-200));
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.cc-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cc-body { flex: 1; }
+.cc-body h3 { font-size: 1rem; font-weight: 700; color: var(--neutral-900); margin-bottom: 6px; }
+.cc-meta { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.cc-meta span { font-size: 0.8rem; color: var(--neutral-500); }
+.cc-level { padding: 2px 8px; border-radius: 100px; font-weight: 600; font-size: 0.75rem; }
+.badge-beginner { background: #d1fae5; color: #065f46; }
+.badge-intermediate { background: #fef3c7; color: #92400e; }
+.badge-advanced { background: #fee2e2; color: #991b1b; }
+.cc-actions { flex-shrink: 0; }
+.btn-danger-sm {
+  padding: 7px 14px;
+  background: #fee2e2;
+  color: var(--red-500);
+  border: 1px solid #fca5a5;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: var(--transition);
+}
+.btn-danger-sm:hover { background: var(--red-500); color: white; border-color: var(--red-500); }
+
+/* textarea in modal */
+.modal-form textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid var(--neutral-200);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 0.93rem;
+  resize: vertical;
+  transition: var(--transition);
+  color: var(--neutral-800);
+}
+.modal-form textarea:focus { border-color: var(--brand-400); outline: none; }
+.modal-form select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid var(--neutral-200);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 0.93rem;
+  color: var(--neutral-800);
+  background: var(--white);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.modal-form select:focus { border-color: var(--brand-400); outline: none; }
+
+/* responsive wallet */
+@media (max-width: 768px) {
+  .wallet-hero-box { margin-left: 0; width: 100%; }
+  .wallet-balance-card { 
+    flex-direction: column; 
+    text-align: center;
+    padding: 24px 20px;
+  }
+  .wallet-balance-left { 
+    flex-direction: column;
+    width: 100%;
+  }
+  .wallet-actions-group { 
+    width: 100%; 
+    justify-content: center;
+    flex-direction: column;
+  }
+  .wallet-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 20px;
+  }
+  .quick-amount-btn {
+    flex: 1 1 calc(50% - 5px);
+    min-width: 120px;
+    text-align: center;
+  }
+}
+/* ══ CREATE COURSE MODAL — compact ══ */
+#create-course-modal .modal-box {
+  padding: 24px 28px;
+}
+#create-course-modal .modal-header h2 {
+  font-size: 1.2rem;
+}
+#create-course-modal .modal-header p {
+  font-size: 0.82rem;
+}
+#create-course-modal .modal-form .form-group {
+  margin-bottom: 12px;
+}
+#create-course-modal .modal-form label {
+  font-size: 0.82rem;
+  margin-bottom: 4px;
+}
+#create-course-modal .modal-form input,
+#create-course-modal .modal-form select,
+#create-course-modal .modal-form textarea {
+  padding: 8px 12px;
+  font-size: 0.88rem;
+}
+#create-course-modal .modal-form textarea {
+  min-height: 80px;
+}
+#create-course-modal .form-row-2 {
+  gap: 12px;
+}

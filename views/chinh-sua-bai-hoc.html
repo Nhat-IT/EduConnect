@@ -1,0 +1,427 @@
+{% extends "layout.html" %}
+{% block title %}Chỉnh Sửa: {{ lesson.title }} – EduConnect{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="/css/tai-khoan-cua-toi.css">
+<style>
+/* ══ EDITOR LAYOUT ══ */
+.editor-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 20px 60px;
+}
+
+.editor-breadcrumb {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.82rem; color: var(--neutral-500);
+  margin-bottom: 24px;
+}
+.editor-breadcrumb a { color: var(--brand-600); text-decoration: none; }
+.editor-breadcrumb a:hover { text-decoration: underline; }
+.editor-breadcrumb span { color: var(--neutral-400); }
+
+.editor-header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+  margin-bottom: 28px;
+}
+.editor-header h1 {
+  font-size: 1.5rem; font-weight: 800; color: var(--neutral-900);
+  margin: 0;
+}
+.editor-header .header-actions { display: flex; gap: 10px; }
+
+/* Section cards */
+.editor-section {
+  background: var(--white);
+  border: 1px solid var(--neutral-200);
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+.editor-section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--neutral-100);
+  background: var(--neutral-50);
+  cursor: pointer;
+  user-select: none;
+}
+.editor-section-header h3 {
+  font-size: 1rem; font-weight: 700; color: var(--neutral-800); margin: 0;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-toggle-icon { font-size: 0.8rem; color: var(--neutral-400); transition: transform 0.2s; }
+.editor-section.collapsed .section-toggle-icon { transform: rotate(-90deg); }
+.editor-section-body { padding: 24px; }
+.editor-section.collapsed .editor-section-body { display: none; }
+
+/* Form styles */
+.form-group { margin-bottom: 18px; }
+.form-group label {
+  display: block; font-size: 0.83rem; font-weight: 600;
+  color: var(--neutral-700); margin-bottom: 6px;
+}
+.form-group input[type=text],
+.form-group input[type=number],
+.form-group input[type=url],
+.form-group select,
+.form-group textarea {
+  width: 100%; padding: 10px 14px;
+  border: 1.5px solid var(--neutral-200);
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: var(--neutral-800);
+  background: var(--white);
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--brand-400); outline: none;
+  box-shadow: 0 0 0 3px var(--brand-100);
+}
+.form-group textarea { resize: vertical; min-height: 100px; }
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+/* Material items */
+.material-item {
+  border: 1.5px solid var(--neutral-200);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  transition: border-color 0.2s;
+}
+.material-item:focus-within { border-color: var(--brand-300); }
+.material-item-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px;
+  background: var(--neutral-50);
+  border-bottom: 1px solid var(--neutral-100);
+  cursor: pointer;
+  user-select: none;
+}
+.material-item.collapsed .material-item-body { display: none; }
+.material-item.collapsed .material-item-header { border-bottom: none; }
+.material-toggle-icon {
+  font-size: 0.75rem; color: var(--neutral-400);
+  transition: transform 0.2s; flex-shrink: 0; margin-left: auto;
+}
+.material-item.collapsed .material-toggle-icon { transform: rotate(-90deg); }
+.drag-handle {
+  color: var(--neutral-300); cursor: grab; font-size: 1rem;
+  flex-shrink: 0;
+}
+.drag-handle:active { cursor: grabbing; }
+.material-item-title { flex: 1; font-size: 0.88rem; font-weight: 600; color: var(--neutral-700); }
+.material-item-body { padding: 14px 16px; }
+.material-item-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 10px; margin-top: 4px;
+  border-top: 1px solid var(--neutral-100);
+}
+.remove-btn {
+  background: none; border: none; color: var(--neutral-400);
+  cursor: pointer; font-size: 0.82rem; padding: 5px 10px;
+  border-radius: 6px; transition: color 0.15s, background 0.15s;
+  flex-shrink: 0; font-family: inherit; font-weight: 500;
+}
+.remove-btn:hover { color: #ef4444; background: #fee2e2; }
+
+/* Exercise items */
+.exercise-item {
+  border: 1.5px solid var(--neutral-200);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  transition: border-color 0.2s;
+}
+.exercise-item:focus-within { border-color: var(--brand-300); }
+.exercise-item-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--neutral-50);
+  border-bottom: 1px solid var(--neutral-100);
+}
+.exercise-item.collapsed .exercise-item-header { border-bottom: none; }
+.exercise-item.collapsed form { display: none; }
+.exercise-item form { padding: 14px 16px; }
+.exercise-item-num {
+  font-size: 0.82rem; font-weight: 700;
+  background: var(--brand-100); color: var(--brand-700);
+  padding: 3px 10px; border-radius: 20px;
+}
+.option-row {
+  display: grid; grid-template-columns: 80px 1fr; gap: 8px; margin-bottom: 8px; align-items: center;
+}
+.option-label {
+  font-size: 0.82rem; font-weight: 600; color: var(--neutral-500);
+  display: flex; align-items: center; gap: 6px;
+}
+.correct-radio { accent-color: var(--brand-500); }
+
+/* Add buttons */
+.add-item-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 12px;
+  border: 2px dashed var(--neutral-300);
+  border-radius: 12px;
+  background: transparent; color: var(--neutral-500);
+  font-size: 0.88rem; font-weight: 600; cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.add-item-btn:hover {
+  border-color: var(--brand-400); color: var(--brand-600);
+  background: var(--brand-50);
+}
+
+/* Saved indicator */
+.save-indicator {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.82rem;
+}
+.save-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--neutral-300); }
+.save-dot.saved { background: #10b981; }
+.save-dot.unsaved { background: #f59e0b; }
+
+/* Bottom sticky bar */
+.editor-sticky-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid var(--neutral-200);
+  padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  z-index: 100;
+  box-shadow: 0 -4px 20px rgba(0,0,0,.06);
+}
+.editor-sticky-bar .sticky-left { font-size: 0.83rem; color: var(--neutral-500); }
+.editor-sticky-bar .sticky-right { display: flex; gap: 10px; }
+
+@media (max-width: 640px) {
+  .form-row-2, .form-row-3 { grid-template-columns: 1fr; }
+  .option-row { grid-template-columns: 70px 1fr; }
+  .editor-sticky-bar { flex-direction: column; gap: 10px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="editor-page">
+
+  <!-- Breadcrumb -->
+  <div class="editor-breadcrumb">
+    <a href="/tai-khoan">Tài Khoản</a>
+    <span>›</span>
+    <a href="/tai-khoan#my-courses">Khóa Học Tôi Tạo</a>
+    <span>›</span>
+    <a href="{{ '/chinh-sua-khoa-hoc/' + lesson.course_id }}">{{ lesson.course_title }}</a>
+    <span>›</span>
+    <span>Chỉnh Sửa Bài Học</span>
+  </div>
+
+  <!-- Header -->
+  <div class="editor-header">
+    <h1>✏️ Chỉnh Sửa Bài Học</h1>
+    <div class="header-actions">
+      <a href="{{ '/xem-bai-hoc/' + lesson.id }}" class="btn-outline-sm" target="_blank">👁 Xem trước</a>
+      <a href="{{ '/chinh-sua-khoa-hoc/' + lesson.course_id }}" class="btn-outline-sm">← Quay lại</a>
+    </div>
+  </div>
+
+  <!-- ══ THÔNG TIN CƠ BẢN ══ -->
+  <div class="editor-section" id="section-basic">
+    <div class="editor-section-header" onclick="toggleSection('basic')">
+      <h3>📋 Thông Tin Cơ Bản</h3>
+      <span class="section-toggle-icon">▾</span>
+    </div>
+    <div class="editor-section-body">
+      <form id="basic-form">
+        <div class="form-group">
+          <label>Tiêu Đề Bài Học *</label>
+          <input type="text" name="title" value="{{ lesson.title }}" required placeholder="Ví dụ: Giới thiệu về Python">
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>URL Video (YouTube hoặc link trực tiếp)</label>
+            <input type="text" name="video_url" value="{{ lesson.video_url or '' }}" placeholder="https://www.youtube.com/watch?v=...">
+            <small style="color:var(--neutral-500);font-size:0.78rem;margin-top:4px;display:block;">Hỗ trợ YouTube, Vimeo, hoặc link MP4 trực tiếp</small>
+          </div>
+          <div class="form-group">
+            <label>Thứ Tự Bài Học</label>
+            <input type="number" name="order_num" value="{{ lesson.order_num or 1 }}" min="1">
+          </div>
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;">
+            <input type="checkbox" name="is_free" value="1" {% if lesson.is_free %}checked{% endif %} style="accent-color:var(--brand-500);width:16px;height:16px;">
+            Bài học này miễn phí (preview cho học viên chưa đăng ký)
+          </label>
+        </div>
+        <div id="basic-msg" class="form-message"></div>
+        <button type="submit" class="btn-primary">💾 Lưu Thông Tin</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ══ TÀI LIỆU HỌC ══ -->
+  <div class="editor-section" id="section-materials">
+    <div class="editor-section-header" onclick="toggleSection('materials')">
+      <h3>📄 Tài Liệu Học <span style="font-weight:400;color:var(--neutral-400);font-size:0.85rem;">({{ materials|length }} tài liệu)</span></h3>
+      <span class="section-toggle-icon">▾</span>
+    </div>
+    <div class="editor-section-body">
+      <div id="materials-list">
+        {% for mat in materials %}
+        <div class="material-item" data-id="{{ mat.id }}" id="mat-{{ mat.id }}">
+          <div class="material-item-header" onclick="toggleMaterial(this)">
+            <span class="drag-handle" onclick="event.stopPropagation()">⠿</span>
+            <span class="material-item-title">
+              {% if mat.material_type == 'code' %}💻{% elif mat.material_type == 'document' %}📄{% else %}📎{% endif %}
+              {{ mat.title }}
+            </span>
+            <span style="font-size:0.75rem;background:var(--neutral-100);color:var(--neutral-500);padding:2px 8px;border-radius:10px;">
+              {% if mat.material_type == 'document' %}Tài liệu{% elif mat.material_type == 'code' %}Code{% elif mat.material_type == 'exercise' %}Bài tập{% else %}Tài liệu{% endif %}
+            </span>
+            <span class="material-toggle-icon">▾</span>
+          </div>
+          <div class="material-item-body">
+            <form class="material-edit-form" data-id="{{ mat.id }}">
+              <div class="form-row-2" style="margin-bottom:12px;">
+                <div class="form-group" style="margin:0;">
+                  <label>Tiêu Đề</label>
+                  <input type="text" name="title" value="{{ mat.title }}" required>
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label>Loại Tài Liệu</label>
+                  <select name="material_type">
+                    <option value="document" {% if mat.material_type=='document' %}selected{% endif %}>📄 Tài liệu đọc</option>
+                    <option value="code"     {% if mat.material_type=='code' %}selected{% endif %}>💻 Code mẫu</option>
+                    <option value="exercise" {% if mat.material_type=='exercise' %}selected{% endif %}>📎 Bài tập</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom:8px;">
+                <label>Tải Lên File Tài Liệu Mới <span style="color:var(--neutral-400);font-weight:400;">(thay thế nội dung bên dưới)</span></label>
+                <input type="file" class="file-upload-input" accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.gif,.zip" style="width:100%;padding:8px;border:1.5px dashed var(--neutral-300);border-radius:10px;cursor:pointer;font-size:0.85rem;">
+                <div class="file-upload-preview" style="margin-top:4px;font-size:0.8rem;color:var(--neutral-500);"></div>
+              </div>
+              <div class="form-group" style="margin-bottom:10px;">
+                <label>Nội Dung Văn Bản (Markdown)</label>
+                <textarea name="content" rows="6" placeholder="Hỗ trợ Markdown: **bold**, `code`, ## heading...">{{ mat.content or '' }}</textarea>
+              </div>
+              <div class="material-item-footer">
+                <button type="button" class="remove-btn" onclick="deleteMaterial({{ mat.id }}, this)">🗑 Xóa tài liệu</button>
+                <button type="submit" class="btn-primary-sm">💾 Lưu tài liệu này</button>
+              </div>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <button class="add-item-btn" id="btn-add-material">+ Thêm Tài Liệu Mới</button>
+      <div id="materials-msg" class="form-message" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <!-- ══ BÀI TẬP ══ -->
+  <div class="editor-section" id="section-exercises">
+    <div class="editor-section-header" onclick="toggleSection('exercises')">
+      <h3>✏️ Bài Tập Trắc Nghiệm <span style="font-weight:400;color:var(--neutral-400);font-size:0.85rem;">({{ exercises|length }} câu)</span></h3>
+      <span class="section-toggle-icon">▾</span>
+    </div>
+    <div class="editor-section-body">
+      <div id="exercises-list">
+        {% for ex in exercises %}
+        <div class="exercise-item" data-id="{{ ex.id }}" id="ex-edit-{{ ex.id }}">
+          <div class="exercise-item-header" onclick="toggleExercise(this)" style="cursor:pointer;user-select:none;">
+            <span class="exercise-item-num">Câu {{ loop.index }}</span>
+            <span class="exercise-item-preview" style="flex:1;margin-left:10px;font-size:0.82rem;color:var(--neutral-500);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ ex.question | truncate(60) }}</span>
+            <span class="material-toggle-icon">▾</span>
+          </div>
+          <form class="exercise-edit-form" data-id="{{ ex.id }}">
+            <div class="form-group">
+              <label>Câu Hỏi *</label>
+              <textarea name="question" rows="2" required>{{ ex.question }}</textarea>
+            </div>
+            <div style="margin-bottom:14px;">
+              <label style="font-size:0.83rem;font-weight:600;color:var(--neutral-700);display:block;margin-bottom:8px;">Các Đáp Án <span style="color:var(--neutral-400);font-weight:400;">(chọn đáp án đúng)</span></label>
+              <div class="option-row">
+                <label class="option-label">
+                  <input type="radio" class="correct-radio" name="correct_answer" value="A" {% if ex.correct_answer == 'A' %}checked{% endif %} required>
+                  <span style="background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:6px;font-size:0.8rem;">A</span>
+                </label>
+                <input type="text" name="option_a" value="{{ ex.option_a or '' }}" placeholder="Đáp án A...">
+              </div>
+              <div class="option-row">
+                <label class="option-label">
+                  <input type="radio" class="correct-radio" name="correct_answer" value="B" {% if ex.correct_answer == 'B' %}checked{% endif %}>
+                  <span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:6px;font-size:0.8rem;">B</span>
+                </label>
+                <input type="text" name="option_b" value="{{ ex.option_b or '' }}" placeholder="Đáp án B...">
+              </div>
+              <div class="option-row">
+                <label class="option-label">
+                  <input type="radio" class="correct-radio" name="correct_answer" value="C" {% if ex.correct_answer == 'C' %}checked{% endif %}>
+                  <span style="background:#fef9c3;color:#713f12;padding:2px 8px;border-radius:6px;font-size:0.8rem;">C</span>
+                </label>
+                <input type="text" name="option_c" value="{{ ex.option_c or '' }}" placeholder="Đáp án C...">
+              </div>
+              <div class="option-row">
+                <label class="option-label">
+                  <input type="radio" class="correct-radio" name="correct_answer" value="D" {% if ex.correct_answer == 'D' %}checked{% endif %}>
+                  <span style="background:#fce7f3;color:#9d174d;padding:2px 8px;border-radius:6px;font-size:0.8rem;">D</span>
+                </label>
+                <input type="text" name="option_d" value="{{ ex.option_d or '' }}" placeholder="Đáp án D...">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Giải Thích (tùy chọn)</label>
+              <textarea name="explanation" rows="2" placeholder="Giải thích tại sao đáp án đúng...">{{ ex.explanation or '' }}</textarea>
+            </div>
+            <div class="material-item-footer">
+              <button type="button" class="remove-btn" onclick="deleteExercise({{ ex.id }}, this)">🗑 Xóa câu hỏi</button>
+              <button type="submit" class="btn-primary-sm">💾 Lưu câu hỏi này</button>
+            </div>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+
+      <button class="add-item-btn" id="btn-add-exercise">+ Thêm Câu Hỏi Trắc Nghiệm</button>
+      <div id="exercises-msg" class="form-message" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <!-- Padding cho sticky bar -->
+  <div style="height:70px;"></div>
+</div>
+
+<!-- ══ STICKY BOTTOM BAR ══ -->
+<div class="editor-sticky-bar">
+  <div class="sticky-left">
+    <div class="save-indicator">
+      <div class="save-dot" id="save-dot"></div>
+      <span id="save-status">Chưa có thay đổi</span>
+    </div>
+  </div>
+  <div class="sticky-right">
+    <a href="{{ '/xem-bai-hoc/' + lesson.id }}" class="btn-outline-sm">👁 Xem trước</a>
+    <a href="{{ '/chinh-sua-khoa-hoc/' + lesson.course_id }}" class="btn-primary">← Về Khóa Học</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Khai báo trước để chinh-sua-bai-hoc.js dùng được
+  const LESSON_ID = {{ lesson.id }};
+  const COURSE_ID = {{ lesson.course_id }};
+</script>
+<script src="/js/chinh-sua-bai-hoc.js"></script>
+{% endblock %}

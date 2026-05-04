@@ -1,0 +1,155 @@
+{% extends "admin/layout.html" %}
+{% block title %}Danh Mục{% endblock %}
+{% block page_title %}Quản Lý Danh Mục{% endblock %}
+
+{% block content %}
+<div class="admin-toolbar">
+  <span class="toolbar-info">Tổng: <strong>{{ categories|length }}</strong> danh mục</span>
+  <button class="btn-admin-primary" onclick="openModal('modal-add-cat')">+ Thêm Danh Mục</button>
+</div>
+
+<div class="dash-card">
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Tên Danh Mục</th>
+          <th>Slug</th>
+          <th>Số Khóa Học</th>
+          <th>Thao Tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cat in categories %}
+        <tr>
+          <td class="td-id">{{ cat.id }}</td>
+          <td><strong>{{ cat.name }}</strong></td>
+          <td><code class="slug-code">{{ cat.slug }}</code></td>
+          <td><span class="badge-enroll">{{ cat.course_count }} khóa</span></td>
+          <td>
+            <div class="td-actions">
+              <button class="btn-edit" onclick="editCat({{ cat.id }}, '{{ cat.name }}')" title="Sửa">✏️</button>
+              <button class="btn-delete" onclick="deleteCat({{ cat.id }}, '{{ cat.name }}')" title="Xóa">🗑️</button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal add -->
+<div class="admin-modal-overlay" id="modal-add-cat" onclick="closeAdminModal(event,'modal-add-cat')">
+  <div class="admin-modal admin-modal-sm">
+    <div class="am-header">
+      <h2>➕ Thêm Danh Mục</h2>
+      <button onclick="closeModal('modal-add-cat')">✕</button>
+    </div>
+    <form id="form-add-cat" class="am-form">
+      <div class="am-field">
+        <label>Tên Danh Mục *</label>
+        <input type="text" name="name" placeholder="Lập Trình Web" required autofocus>
+        <small style="color:var(--a-text-muted)">Slug sẽ được tạo tự động</small>
+      </div>
+      <div id="msg-add-cat" class="am-msg"></div>
+      <div class="am-footer">
+        <button type="button" onclick="closeModal('modal-add-cat')" class="btn-admin-ghost">Hủy</button>
+        <button type="submit" class="btn-admin-primary">Thêm</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal edit -->
+<div class="admin-modal-overlay" id="modal-edit-cat" onclick="closeAdminModal(event,'modal-edit-cat')">
+  <div class="admin-modal admin-modal-sm">
+    <div class="am-header">
+      <h2>✏️ Sửa Danh Mục</h2>
+      <button onclick="closeModal('modal-edit-cat')">✕</button>
+    </div>
+    <form id="form-edit-cat" class="am-form">
+      <input type="hidden" id="edit-cat-id">
+      <div class="am-field">
+        <label>Tên Danh Mục *</label>
+        <input type="text" name="name" id="edit-cat-name" required>
+      </div>
+      <div id="msg-edit-cat" class="am-msg"></div>
+      <div class="am-footer">
+        <button type="button" onclick="closeModal('modal-edit-cat')" class="btn-admin-ghost">Hủy</button>
+        <button type="submit" class="btn-admin-primary">Lưu</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal delete -->
+<div class="admin-modal-overlay" id="modal-del-cat" onclick="closeAdminModal(event,'modal-del-cat')">
+  <div class="admin-modal admin-modal-sm">
+    <div class="am-header">
+      <h2>⚠️ Xóa Danh Mục</h2>
+      <button onclick="closeModal('modal-del-cat')">✕</button>
+    </div>
+    <div class="am-confirm-body">
+      <p>Xóa danh mục: <strong id="del-cat-name"></strong>?</p>
+      <p class="am-warning">⚠️ Không thể xóa nếu danh mục đang có khóa học.</p>
+    </div>
+    <div class="am-footer">
+      <button onclick="closeModal('modal-del-cat')" class="btn-admin-ghost">Hủy</button>
+      <button id="btn-del-cat" class="btn-admin-danger">Xóa</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Helper: gửi POST với Content-Type đúng để express.urlencoded() đọc được
+function postForm(url, formEl) {
+  return fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams(new FormData(formEl))
+  }).then(r => r.json());
+}
+
+// Thêm danh mục
+document.getElementById('form-add-cat').addEventListener('submit', async e => {
+  e.preventDefault();
+  const data = await postForm('/admin/categories/add', e.target);
+  showAdminToast(data.message, data.success ? 'success' : 'error');
+  if (data.success) setTimeout(() => location.reload(), 700);
+});
+
+// Sửa danh mục
+function editCat(id, name) {
+  document.getElementById('edit-cat-id').value = id;
+  document.getElementById('edit-cat-name').value = name;
+  openModal('modal-edit-cat');
+}
+
+document.getElementById('form-edit-cat').addEventListener('submit', async e => {
+  e.preventDefault();
+  const id   = document.getElementById('edit-cat-id').value;
+  const data = await postForm(`/admin/categories/edit/${id}`, e.target);
+  showAdminToast(data.message, data.success ? 'success' : 'error');
+  if (data.success) setTimeout(() => location.reload(), 700);
+});
+
+// Xóa danh mục
+let delCatId = null;
+function deleteCat(id, name) {
+  delCatId = id;
+  document.getElementById('del-cat-name').textContent = name;
+  openModal('modal-del-cat');
+}
+
+document.getElementById('btn-del-cat').addEventListener('click', async () => {
+  const res  = await fetch(`/admin/categories/delete/${delCatId}`, { method: 'POST' });
+  const data = await res.json();
+  showAdminToast(data.message, data.success ? 'success' : 'error');
+  if (data.success) setTimeout(() => location.reload(), 700);
+});
+</script>
+{% endblock %}

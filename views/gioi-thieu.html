@@ -1,0 +1,118 @@
+{% extends "layout.html" %}
+{% block title %}Giới Thiệu – EduConnect{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="/css/gioi-thieu.css">
+{% endblock %}
+
+{% block content %}
+
+<!-- ── ABOUT HERO ── -->
+<section class="about-hero">
+  <div class="container about-hero-inner">
+    <div class="about-hero-content">
+      <span class="section-label">Về Chúng Tôi</span>
+      <h1>Chúng Tôi Là <span style="color:var(--accent-400)">EduConnect</span></h1>
+      <p>EduConnect là nền tảng giáo dục trực tuyến hàng đầu Việt Nam, với sứ mệnh đưa kiến thức thực chiến đến với mọi người. Chúng tôi tin rằng việc học không bao giờ là quá muộn và ai cũng xứng đáng được tiếp cận giáo dục chất lượng cao.</p>
+      <div class="about-mini-stats">
+        <div class="about-stat"><strong>2019</strong><span>Năm thành lập</span></div>
+        <div class="about-stat"><strong>50+</strong><span>Khóa học</span></div>
+        <div class="about-stat"><strong>3K+</strong><span>Học viên</span></div>
+        <div class="about-stat"><strong>98%</strong><span>Hài lòng</span></div>
+      </div>
+    </div>
+    <div class="about-hero-visual">
+      <div class="about-bg-orb"></div>
+      <div class="about-emoji-grid">
+        <div class="ae-card">🎓</div>
+        <div class="ae-card">💻</div>
+        <div class="ae-card">📈</div>
+        <div class="ae-card">🚀</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── MISSION ── -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-head center">
+      <span class="section-label">Sứ Mệnh</span>
+      <h2 class="section-title">Vì Sao EduConnect Ra Đời</h2>
+    </div>
+    <div class="mission-grid">
+      <div class="mission-card">
+        <div class="mission-num">01</div>
+        <h3>Khoảng Cách Giáo Dục</h3>
+        <p>Chúng tôi nhận ra rằng nhiều người trẻ Việt Nam muốn học các kỹ năng số nhưng không có điều kiện tiếp cận khóa học chất lượng với mức giá hợp lý.</p>
+      </div>
+      <div class="mission-card">
+        <div class="mission-num">02</div>
+        <h3>Kiến Thức Thực Chiến</h3>
+        <p>Phần lớn chương trình học truyền thống thiếu tính thực tiễn. EduConnect tập trung vào nội dung áp dụng ngay được, do người đã thành công trong nghề giảng dạy.</p>
+      </div>
+      <div class="mission-card">
+        <div class="mission-num">03</div>
+        <h3>Học Không Giới Hạn</h3>
+        <p>Mọi người đều xứng đáng có cơ hội phát triển bản thân. EduConnect xóa bỏ rào cản về địa lý, thời gian và chi phí trong việc học tập.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── VALUES ── -->
+<section class="section">
+  <div class="container">
+    <div class="section-head center">
+      <span class="section-label">Giá Trị Cốt Lõi</span>
+      <h2 class="section-title">Những Gì Chúng Tôi Tin</h2>
+    </div>
+    <div class="values-list">
+      <div class="value-item">
+        <div class="value-icon">🎯</div>
+        <div class="value-body">
+          <h3>Thực Chiến Trên Hết</h3>
+          <p>Mỗi bài học đều gắn liền với thực tế. Học xong là làm được ngay.</p>
+        </div>
+      </div>
+      <div class="value-item">
+        <div class="value-icon">🤝</div>
+        <div class="value-body">
+          <h3>Cộng Đồng Học Tập</h3>
+          <p>Không ai học một mình. Cộng đồng EduConnect luôn sẵn sàng hỗ trợ bạn.</p>
+        </div>
+      </div>
+      <div class="value-item">
+        <div class="value-icon">♻️</div>
+        <div class="value-body">
+          <h3>Cập Nhật Liên Tục</h3>
+          <p>Thế giới thay đổi, kiến thức cũng phải thay đổi. Nội dung luôn được làm mới.</p>
+        </div>
+      </div>
+      <div class="value-item">
+        <div class="value-icon">💎</div>
+        <div class="value-body">
+          <h3>Chất Lượng Cam Kết</h3>
+          <p>Cam kết hoàn tiền 30 ngày. Không hài lòng, hoàn 100% học phí.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── JOIN CTA ── -->
+<section class="about-cta">
+  <div class="container" style="text-align:center;">
+    <h2>Sẵn Sàng Bắt Đầu?</h2>
+    <p>Tham gia EduConnect và bắt đầu hành trình thay đổi cuộc đời ngay hôm nay.</p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:28px;">
+      <a href="/khoa-hoc" class="btn-primary">Xem Khóa Học</a>
+      <a href="/lien-he" class="btn-outline" style="border-color:rgba(255,255,255,0.4);color:white;">Liên Hệ Chúng Tôi</a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+{% block extra_js %}
+<script src="/js/gioi-thieu.js"></script>
+{% endblock %}

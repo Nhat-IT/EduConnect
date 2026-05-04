@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Admin{% endblock %} — EduConnect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+</head>
+<body class="admin-body">
+
+<aside class="admin-sidebar" id="admin-sidebar">
+  <div class="sidebar-brand">
+    <span class="brand-icon">🎓</span>
+    <span class="brand-text">Edu<strong>Admin</strong></span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-group">
+      <span class="nav-group-label">Tổng Quan</span>
+      <a href="/admin" class="sidebar-link {% if request.endpoint=='admin_dashboard' %}active{% endif %}">
+        <span class="sl-icon">📊</span> Dashboard
+      </a>
+    </div>
+    <div class="nav-group">
+      <span class="nav-group-label">Quản Lý</span>
+      <a href="/admin/courses" class="sidebar-link {% if request.endpoint=='admin_courses' %}active{% endif %}">
+        <span class="sl-icon">📚</span> Khóa Học
+      </a>
+      <a href="/admin/users" class="sidebar-link {% if request.endpoint=='admin_users' %}active{% endif %}">
+        <span class="sl-icon">👥</span> Học Viên
+      </a>
+      <a href="/admin/categories" class="sidebar-link {% if request.endpoint=='admin_categories' %}active{% endif %}">
+        <span class="sl-icon">🏷️</span> Danh Mục
+      </a>
+      <a href="/admin/contacts" class="sidebar-link {% if request.endpoint=='admin_contacts' %}active{% endif %}">
+        <span class="sl-icon">✉️</span> Liên Hệ
+        {% set cnt = get_contact_count() %}
+        {% if cnt > 0 %}<span class="badge-nav">{{ cnt }}</span>{% endif %}
+      </a>
+      <a href="/admin/withdrawals" class="sidebar-link {% if request.endpoint=='admin_withdrawals' %}active{% endif %}">
+        <span class="sl-icon">💸</span> Yêu Cầu Rút Tiền
+        {% set wd_cnt = get_withdrawal_count() %}
+        {% if wd_cnt > 0 %}<span class="badge-nav">{{ wd_cnt }}</span>{% endif %}
+      </a>
+      <a href="/admin/deposits" class="sidebar-link {% if request.endpoint=='admin_deposits' %}active{% endif %}">
+        <span class="sl-icon">💰</span> Yêu Cầu Nạp Tiền
+        {% set dep_cnt = get_deposit_count() %}
+        {% if dep_cnt > 0 %}<span class="badge-nav">{{ dep_cnt }}</span>{% endif %}
+      </a>
+      <a href="/admin/delete-requests" class="sidebar-link {% if request.endpoint=='admin_delete_requests' %}active{% endif %}">
+        <span class="sl-icon">🗑️</span> Xóa Tài Khoản
+        {% set dr_cnt = get_delete_request_count() %}
+        {% if dr_cnt > 0 %}<span class="badge-nav">{{ dr_cnt }}</span>{% endif %}
+      </a>
+      <a href="/admin/password-resets" class="sidebar-link {% if request.endpoint=='admin_password_resets' %}active{% endif %}">
+        <span class="sl-icon">🔑</span> Quên Mật Khẩu
+        {% set pr_cnt = get_password_reset_count() %}
+        {% if pr_cnt > 0 %}<span class="badge-nav">{{ pr_cnt }}</span>{% endif %}
+      </a>
+    </div>
+    <div class="nav-group">
+      <span class="nav-group-label">Hệ Thống</span>
+      <a href="/" target="_blank" class="sidebar-link">
+        <span class="sl-icon">🌐</span> Xem Website
+      </a>
+      <a href="/admin/logout" class="sidebar-link sidebar-logout">
+        <span class="sl-icon">🚪</span> Đăng Xuất
+      </a>
+    </div>
+  </nav>
+  <div class="sidebar-user">
+    <div class="su-avatar">{{ (current_user.name if current_user else 'A') | first }}</div>
+    <div class="su-info">
+      <strong>{{ current_user.name if current_user else 'Admin' }}</strong>
+      <span>Quản Trị Viên</span>
+    </div>
+  </div>
+</aside>
+
+<div class="admin-main" id="admin-main">
+  <header class="admin-topbar">
+    <button class="topbar-toggle" onclick="toggleSidebar()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="topbar-breadcrumb">
+      <a href="/admin" class="breadcrumb-home">🏠</a>
+      <span class="breadcrumb-sep">›</span>
+      <span class="topbar-title">{% block page_title %}Dashboard{% endblock %}</span>
+    </div>
+    <div class="topbar-actions">
+      <a href="/" target="_blank" class="topbar-btn" title="Xem website">🌐</a>
+      <a href="/admin/logout" class="topbar-btn topbar-logout" title="Đăng xuất">🚪</a>
+    </div>
+  </header>
+
+  {% set warning_msgs = get_flashed_messages('warning') %}
+  {% set error_msgs = get_flashed_messages('error') %}
+  {% set success_msgs = get_flashed_messages('success') %}
+  {% set info_msgs = get_flashed_messages('info') %}
+  {% if warning_msgs.length or error_msgs.length or success_msgs.length or info_msgs.length %}
+    <div class="admin-flashes">
+      {% for msg in warning_msgs %}<div class="admin-flash admin-flash-warning">{{ msg }}</div>{% endfor %}
+      {% for msg in error_msgs %}<div class="admin-flash admin-flash-error">{{ msg }}</div>{% endfor %}
+      {% for msg in success_msgs %}<div class="admin-flash admin-flash-success">{{ msg }}</div>{% endfor %}
+      {% for msg in info_msgs %}<div class="admin-flash admin-flash-info">{{ msg }}</div>{% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="admin-content">
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+<div class="admin-toast" id="admin-toast"></div>
+<script src="/js/admin.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,223 @@
+{% extends "layout.html" %}
+{% block title %}Chỉnh Sửa Khóa Học: {{ course.title }} – EduConnect{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/css/tai-khoan-cua-toi.css">
+<link rel="stylesheet" href="/css/chinh-sua-khoa-hoc.css">
+{% endblock %}
+
+{% block content %}
+<div class="editor-page">
+
+  <div class="editor-breadcrumb">
+    <a href="/tai-khoan">Tài Khoản</a>
+    <span>›</span>
+    <a href="/tai-khoan#my-courses">Khóa Học Tôi Tạo</a>
+    <span>›</span>
+    <span>Chỉnh Sửa Khóa Học</span>
+  </div>
+
+  <div class="editor-header">
+    <h1>📚 Chỉnh Sửa Khóa Học</h1>
+    <div class="header-actions">
+      <a href="/tai-khoan#my-courses" class="btn-outline-sm">← Quay lại</a>
+    </div>
+  </div>
+
+  {# ---------- Thông tin cơ bản ---------- #}
+  <div class="editor-section" id="section-basic">
+    <div class="editor-section-header" onclick="toggleSection('basic')">
+      <h3>📋 Thông Tin Khóa Học</h3>
+      <span class="section-toggle-icon">▾</span>
+    </div>
+    <div class="editor-section-body">
+      <form id="course-basic-form" enctype="multipart/form-data">
+        <div class="form-group">
+          <label>Tên Khóa Học *</label>
+          <input type="text" name="title" value="{{ course.title }}" required
+                 placeholder="Ví dụ: Học Python Từ Cơ Bản">
+        </div>
+
+        <div class="form-group">
+          <label>Mô Tả</label>
+          <textarea name="description" rows="4"
+                    placeholder="Mô tả nội dung và mục tiêu khóa học...">{{ course.description or '' }}</textarea>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Giá Khóa Học (₫)</label>
+            <input type="number" name="price" value="{{ course.price or 0 }}"
+                   min="0" step="1000" placeholder="0 = miễn phí">
+          </div>
+          <div class="form-group">
+            <label>Giá Gốc (₫)</label>
+            <input type="number" name="original_price" value="{{ course.original_price or '' }}"
+                   min="0" step="1000" placeholder="Để trống nếu không có">
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Danh Mục</label>
+            <select name="category_id">
+              <option value="">-- Không có --</option>
+              {% for cat in categories %}
+              <option value="{{ cat.id }}" {% if course.category_id == cat.id %}selected{% endif %}>
+                {{ cat.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Cấp Độ</label>
+            <select name="level">
+              <option value="beginner"     {% if course.level=='beginner' %}selected{% endif %}>🌱 Cơ bản</option>
+              <option value="intermediate" {% if course.level=='intermediate' %}selected{% endif %}>📈 Trung cấp</option>
+              <option value="advanced"     {% if course.level=='advanced' %}selected{% endif %}>🚀 Nâng cao</option>
+            </select>
+          </div>
+        </div>
+
+        {# ---------- Ảnh đại diện ---------- #}
+        <div class="form-group">
+          <label>Ảnh Đại Diện</label>
+
+          {% if course.image %}
+          <div id="current-thumb" class="thumb-current">
+            <img src="{{ course.image }}" alt="Ảnh Đại Diện hiện tại">
+            <div class="thumb-caption">Ảnh Đại Diện hiện tại</div>
+          </div>
+          {% endif %}
+
+          <div class="thumb-upload-wrap">
+            <div>
+              <label class="thumb-sub-label">📎 Upload file ảnh</label>
+              <input type="file" name="thumbnail_file" accept="image/*"
+                     id="thumb-file-input" class="thumb-file-input"
+                     onchange="previewThumb(this)">
+            </div>
+
+            <div class="thumb-divider">— hoặc —</div>
+
+            <div>
+              <label class="thumb-sub-label">🔗 Dán link URL ảnh</label>
+              <input type="url" name="thumbnail" id="thumb-url-input"
+                     value="{{ course.image or '' }}"
+                     placeholder="https://..."
+                     oninput="previewThumbUrl(this.value)">
+            </div>
+
+            <div id="thumb-preview-wrap" class="thumb-preview">
+              <img id="thumb-preview-img" src="" alt="Preview">
+              <div class="thumb-caption">Xem trước ảnh mới</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="course-basic-msg" class="form-message"></div>
+        <button type="submit" class="btn-primary">💾 Lưu Thông Tin Khóa Học</button>
+      </form>
+    </div>
+  </div>
+
+  {# ---------- Danh sách bài học ---------- #}
+  <div class="editor-section" id="section-lessons">
+    <div class="editor-section-header" onclick="toggleSection('lessons')">
+      <h3>🎬 Danh Sách Bài Học
+        <span style="font-weight:400;color:var(--neutral-400);font-size:0.85rem;">
+          ({{ lessons|length }} bài)
+        </span>
+      </h3>
+      <span class="section-toggle-icon">▾</span>
+    </div>
+    <div class="editor-section-body">
+      <div class="lesson-list" id="lesson-list">
+        {% for lesson in lessons %}
+        <div class="lesson-item" id="lesson-row-{{ lesson.id }}">
+          <span class="lesson-order">{{ lesson.order_num }}</span>
+          <div class="lesson-info">
+            <div class="lesson-title">{{ lesson.title }}</div>
+            <div class="lesson-meta">
+              {% if lesson.duration_minutes %}⏱ {{ lesson.duration_minutes }} phút{% endif %}
+              {% if lesson.is_free %}<span class="free-tag">{{ ' · ' if lesson.duration_minutes }}Miễn phí</span>{% endif %}
+            </div>
+          </div>
+          <div class="lesson-actions">
+            <a href="{{ '/chinh-sua-bai-hoc/' + lesson.id }}" class="btn-outline-sm">✏️ Sửa</a>
+            <button type="button" class="btn-outline-sm btn-delete"
+                    data-lesson-id="{{ lesson.id }}"
+                    data-lesson-title="{{ lesson.title }}">🗑</button>
+          </div>
+        </div>
+        {% else %}
+        <div id="empty-lessons" class="empty-lessons">
+          Chưa có bài học nào. Hãy thêm bài học đầu tiên!
+        </div>
+        {% endfor %}
+      </div>
+
+      {# ---------- Form thêm bài học ---------- #}
+      <div class="add-lesson-form" id="add-lesson-form">
+        <div class="form-title">➕ Thêm Bài Học Mới</div>
+
+        <div class="form-group">
+          <label>Tiêu Đề Bài Học *</label>
+          <input type="text" id="new-lesson-title" placeholder="Ví dụ: Giới thiệu về Python">
+        </div>
+
+        <div class="form-group">
+            <label>Thứ Tự</label>
+            <input type="number" id="new-lesson-order" value="{{ lessons|length + 1 }}" min="1">
+          </div>
+
+        <div class="form-group">
+          <label>URL Video (tùy chọn)</label>
+          <input type="url" id="new-lesson-video" placeholder="https://www.youtube.com/watch?v=...">
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="new-lesson-free">
+            Bài học này miễn phí (preview)
+          </label>
+        </div>
+
+        <div id="add-lesson-msg" class="form-message"></div>
+        <div class="actions">
+          <button type="button" class="btn-outline-sm" onclick="closeAddLessonForm()">Hủy</button>
+          <button type="button" class="btn-primary" onclick="submitAddLesson()">+ Thêm Bài Học</button>
+        </div>
+      </div>
+
+      <button type="button" class="add-lesson-btn" id="btn-open-add-lesson"
+              onclick="openAddLessonForm()">
+        + Thêm Bài Học Mới
+      </button>
+    </div>
+  </div>
+
+  <div class="editor-spacer"></div>
+</div>
+
+{# ---------- Sticky bar ---------- #}
+<div class="editor-sticky-bar">
+  <div class="sticky-left">
+    <div class="save-indicator">
+      <div class="save-dot" id="save-dot"></div>
+      <span id="save-status">Chưa có thay đổi</span>
+    </div>
+  </div>
+  <div class="sticky-right">
+    <a href="/tai-khoan#my-courses" class="btn-outline-sm">← Về Tài Khoản</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Truyền biến từ Jinja sang JS trước khi nạp file JS
+  const COURSE_ID = {{ course.id }};
+</script>
+<script src="/js/chinh-sua-khoa-hoc.js"></script>
+{% endblock %}

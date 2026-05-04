@@ -1,0 +1,182 @@
+{% extends "admin/layout.html" %}
+{% block title %}Yêu Cầu Xóa Tài Khoản{% endblock %}
+{% block page_title %}Yêu Cầu Xóa Tài Khoản{% endblock %}
+
+{% block content %}
+<div class="admin-toolbar">
+  <div style="display:flex;gap:8px;">
+    <a href="?status=pending"  class="btn-admin-sm {% if status_filter=='pending' or not status_filter %}btn-admin-primary{% else %}btn-admin-ghost{% endif %}">
+      ⏳ Chờ xử lý {% if pending_count > 0 %}<span style="background:#ef4444;color:#fff;border-radius:999px;padding:1px 7px;font-size:.72rem;margin-left:4px;">{{ pending_count }}</span>{% endif %}
+    </a>
+    <a href="?status=rejected" class="btn-admin-sm {% if status_filter=='rejected' %}btn-admin-primary{% else %}btn-admin-ghost{% endif %}">✕ Đã từ chối</a>
+    <a href="?status=approved" class="btn-admin-sm {% if status_filter=='approved' %}btn-admin-primary{% else %}btn-admin-ghost{% endif %}">✓ Đã xóa</a>
+  </div>
+  <span class="toolbar-info">Tổng: <strong>{{ total }}</strong> yêu cầu xóa tài khoản</span>
+</div>
+<div class="dash-card">
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Học Viên</th>
+          <th>Email</th>
+          <th>Lý Do</th>
+          <th>Ngày Gửi</th>
+          <th>Trạng Thái</th>
+          <th>Thao Tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in requests %}
+        <tr id="row-dr-{{ r.id }}">
+          <td class="td-id">{{ r.id }}</td>
+          <td>
+            <div class="td-user">
+              <div class="td-avatar">{{ r.user_name[0] }}</div>
+              <strong>{{ r.user_name }}</strong>
+            </div>
+          </td>
+          <td class="td-email">{{ r.user_email }}</td>
+          <td style="max-width:220px;">
+            {% if r.reason and r.reason|length > 80 %}
+              <span class="reason-short">{{ r.reason | truncate(80, false, '') }}…</span>
+              <button class="btn-reason-more" onclick="showReason({{ r.reason|tojson }})">Xem thêm</button>
+            {% else %}
+              <span style="font-size:.85rem;color:var(--a-text-muted);white-space:normal;">{{ r.reason }}</span>
+            {% endif %}
+          </td>
+          <td class="td-date">{{ r.created_at | date if r.created_at else '—' }}</td>
+          <td>
+            {% if r.status == 'pending' %}
+              <span class="badge-status badge-pending">⏳ Chờ xử lý</span>
+            {% elif r.status == 'rejected' %}
+              <span class="badge-status badge-rejected">✕ Đã từ chối</span>
+            {% else %}
+              <span class="badge-status badge-done">✓ Đã xóa</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if r.status == 'pending' %}
+            <div class="td-actions">
+              <button class="btn-admin-danger btn-sm" onclick="approveDelete({{ r.id }}, {{ r.user_name|tojson }})" title="Duyệt & xóa tài khoản">🗑️ Duyệt</button>
+              <button class="btn-admin-ghost btn-sm" onclick="rejectDelete({{ r.id }})" title="Từ chối">✕ Từ chối</button>
+            </div>
+            {% else %}
+              <span style="color:var(--a-text-muted);font-size:.8rem;">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="td-empty">Không có yêu cầu xóa tài khoản nào.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if total_pages > 1 %}
+  <div class="admin-pagination">
+    {% if page > 1 %}<a href="?page={{ page-1 }}&status={{ status_filter }}" class="pg-btn">←</a>{% endif %}
+    {% for p in range(1, total_pages+1) %}
+      {% if p == page %}<span class="pg-btn active">{{ p }}</span>
+      {% elif p == 1 or p == total_pages or (p >= page-2 and p <= page+2) %}<a href="?page={{ p }}&status={{ status_filter }}" class="pg-btn">{{ p }}</a>
+      {% elif p == page-3 or p == page+3 %}<span class="pg-btn" style="border:none;pointer-events:none;">…</span>{% endif %}
+    {% endfor %}
+    {% if page < total_pages %}<a href="?page={{ page+1 }}&status={{ status_filter }}" class="pg-btn">→</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- Modal xem lý do đầy đủ -->
+<div class="admin-modal-overlay" id="modal-reason" onclick="closeAdminModal(event,'modal-reason')">
+  <div class="admin-modal admin-modal-sm">
+    <div class="am-header">
+      <h2>📋 Lý Do Xóa Tài Khoản</h2>
+      <button onclick="closeModal('modal-reason')">✕</button>
+    </div>
+    <div class="am-confirm-body" style="text-align:left;padding:20px 24px;">
+      <p id="modal-reason-text" style="line-height:1.7;white-space:pre-wrap;color:var(--a-text);font-size:.92rem;margin:0;"></p>
+    </div>
+    <div class="am-footer">
+      <button onclick="closeModal('modal-reason')" class="btn-admin-ghost">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal confirm approve delete -->
+<div class="admin-modal-overlay" id="modal-approve-delete" onclick="closeAdminModal(event,'modal-approve-delete')">
+  <div class="admin-modal admin-modal-sm">
+    <div class="am-header">
+      <h2>⚠️ Xác Nhận Xóa Tài Khoản</h2>
+      <button onclick="closeModal('modal-approve-delete')">✕</button>
+    </div>
+    <div class="am-confirm-body">
+      <p>Bạn có chắc muốn xóa vĩnh viễn tài khoản của:</p>
+      <strong id="approve-delete-name" style="font-size:1.05rem;color:var(--a-danger);"></strong>
+      <p class="am-warning">⚠️ Tất cả dữ liệu (khóa học đã tạo, giao dịch, đánh giá) sẽ bị xóa vĩnh viễn và không thể khôi phục!</p>
+    </div>
+    <div class="am-footer">
+      <button onclick="closeModal('modal-approve-delete')" class="btn-admin-ghost">Hủy</button>
+      <button id="btn-confirm-approve-delete" class="btn-admin-danger">Xác Nhận Xóa</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+.badge-status { display:inline-block; padding:3px 10px; border-radius:20px; font-size:.78rem; font-weight:600; }
+.badge-pending  { background:rgba(245,158,11,.15); color:#d97706; }
+.badge-rejected { background:rgba(107,114,128,.12); color:var(--a-text-muted); }
+.badge-done     { background:rgba(239,68,68,.1); color:var(--a-danger); }
+.btn-sm { padding:5px 10px !important; font-size:.78rem !important; }
+.reason-short { font-size:.85rem; color:var(--a-text-muted); display:inline; }
+.btn-reason-more {
+  display:inline; margin-left:4px; background:none; border:none;
+  color:var(--a-primary,#6366f1); font-size:.78rem; cursor:pointer;
+  text-decoration:underline; padding:0; font-family:inherit;
+}
+.btn-reason-more:hover { opacity:.75; }
+.btn-admin-sm     { display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border-radius:8px;font-size:.82rem;font-weight:600;cursor:pointer;text-decoration:none;border:1px solid var(--a-border);transition:background .15s; }
+.btn-admin-primary.btn-admin-sm { background:var(--a-primary);color:#fff;border-color:var(--a-primary); }
+.btn-admin-ghost.btn-admin-sm   { background:var(--a-card);color:var(--a-text); }
+</style>
+<script>
+let approveDeleteId = null;
+
+function showReason(text) {
+  document.getElementById('modal-reason-text').textContent = text;
+  openModal('modal-reason');
+}
+
+function approveDelete(id, name) {
+  approveDeleteId = id;
+  document.getElementById('approve-delete-name').textContent = name;
+  openModal('modal-approve-delete');
+}
+
+document.getElementById('btn-confirm-approve-delete').addEventListener('click', async () => {
+  if (!approveDeleteId) return;
+  const btn = document.getElementById('btn-confirm-approve-delete');
+  btn.textContent = 'Đang xóa...'; btn.disabled = true;
+  const res = await fetch(`/admin/delete-requests/approve/${approveDeleteId}`, { method: 'POST' });
+  const data = await res.json();
+  showAdminToast(data.message, data.success ? 'success' : 'error');
+  if (data.success) setTimeout(() => location.reload(), 800);
+  else { btn.textContent = 'Xác Nhận Xóa'; btn.disabled = false; }
+});
+
+async function rejectDelete(id) {
+  if (!confirm('Bạn có chắc muốn từ chối yêu cầu này?')) return;
+  try {
+    const res = await fetch(`/admin/delete-requests/reject/${id}`, { method: 'POST' });
+    if (!res.ok) { showAdminToast('Lỗi kết nối máy chủ.', 'error'); return; }
+    const data = await res.json();
+    showAdminToast(data.message, data.success ? 'success' : 'error');
+    if (data.success) setTimeout(() => location.reload(), 800);
+  } catch (e) {
+    showAdminToast('Đã xảy ra lỗi, vui lòng thử lại.', 'error');
+  }
+}
+</script>
+{% endblock %}

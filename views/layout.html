@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EduConnect – Học Nhanh, Thành Công Sớm{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Clash+Display:wght@500;600;700&display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/responsive.css">
+    {% block extra_css %}{% endblock %}
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="site-header" id="site-header">
+    <div class="container header-inner">
+        <a href="/" class="logo">
+            <span class="logo-icon">🎓</span>
+            <span class="logo-text">Edu<strong>Connect</strong></span>
+        </a>
+
+        <nav class="main-nav" id="main-nav">
+            <a href="/" class="nav-link {% if request.endpoint == 'trang_chu' %}active{% endif %}">Trang Chủ</a>
+            <a href="/khoa-hoc" class="nav-link {% if request.endpoint == 'tat_ca_khoa_hoc' %}active{% endif %}">Khóa Học</a>
+            <a href="/gioi-thieu" class="nav-link {% if request.endpoint == 'gioi_thieu' %}active{% endif %}">Giới Thiệu</a>
+            <a href="/lien-he" class="nav-link {% if request.endpoint == 'lien_he' %}active{% endif %}">Liên Hệ</a>
+        </nav>
+
+        <div class="header-actions">
+            {% if current_user %}
+                {% set safe_user_name = current_user.name if current_user.name else 'User' %}
+                <a href="/tai-khoan" class="btn-account">
+                    <span class="avatar-circle">{{ safe_user_name[0] | upper }}</span>
+                    <span>{{ safe_user_name.split(' ')[0] }}</span>
+                </a>
+                <a href="/logout" class="btn-outline-sm">Đăng Xuất</a>
+            {% else %}
+                <button class="btn-outline-sm" onclick="openModal('login-modal')">Đăng Nhập</button>
+                <button class="btn-primary-sm" onclick="openModal('register-modal')">Đăng Ký</button>
+            {% endif %}
+        </div>
+
+        <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </button>
+    </div>
+</header>
+
+<!-- Flash messages -->
+{% set warning_msgs = get_flashed_messages('warning') %}
+{% set error_msgs = get_flashed_messages('error') %}
+{% set success_msgs = get_flashed_messages('success') %}
+{% set info_msgs = get_flashed_messages('info') %}
+{% if warning_msgs | length or error_msgs | length or success_msgs | length or info_msgs | length %}
+<div class="flash-messages">
+    {% for msg in warning_msgs %}<div class="flash flash-warning">{{ msg }}</div>{% endfor %}
+    {% for msg in error_msgs %}<div class="flash flash-error">{{ msg }}</div>{% endfor %}
+    {% for msg in success_msgs %}<div class="flash flash-success">{{ msg }}</div>{% endfor %}
+    {% for msg in info_msgs %}<div class="flash flash-info">{{ msg }}</div>{% endfor %}
+</div>
+{% endif %}
+
+<!-- ── MAIN CONTENT ── -->
+<main>{% block content %}{% endblock %}</main>
+
+<!-- ── FOOTER ── -->
+<footer class="site-footer">
+    <div class="container footer-grid">
+        <div class="footer-brand">
+            <a href="/" class="logo logo-light">
+                <span class="logo-icon">🎓</span>
+                <span class="logo-text">Edu<strong>Connect</strong></span>
+            </a>
+            <p>Nền tảng học tập trực tuyến hàng đầu Việt Nam. Học nhanh – kiếm tiền sớm.</p>
+            <div class="social-links">
+                <a href="#" aria-label="Facebook">f</a>
+                <a href="#" aria-label="YouTube">▶</a>
+                <a href="#" aria-label="TikTok">♪</a>
+            </div>
+        </div>
+        <div class="footer-col">
+            <h4>Khóa Học</h4>
+            <a href="/khoa-hoc?category=lap-trinh-web">Lập Trình Web</a>
+            <a href="/khoa-hoc?category=digital-marketing">Digital Marketing</a>
+            <a href="/khoa-hoc?category=seo">SEO</a>
+            <a href="/khoa-hoc?category=thiet-ke">Thiết Kế</a>
+        </div>
+        <div class="footer-col">
+            <h4>Liên Kết</h4>
+            <a href="/gioi-thieu">Giới Thiệu</a>
+            <a href="/lien-he">Liên Hệ</a>
+            <a href="#">Chính Sách Bảo Mật</a>
+            <a href="#">Điều Khoản Dịch Vụ</a>
+        </div>
+        <div class="footer-col">
+            <h4>Liên Hệ</h4>
+            <p>📍 TP. Hồ Chí Minh, Việt Nam</p>
+            <p>📞 0909 999 888</p>
+            <p>✉️ hello@educonnect.vn</p>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <div class="container">
+            <p>© 2024 EduConnect. Bảo lưu mọi quyền.</p>
+        </div>
+    </div>
+</footer>
+
+<!-- ── MODAL ĐĂNG NHẬP ── -->
+<div class="modal-overlay" id="login-modal" onclick="closeModalOverlay(event, 'login-modal')">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal('login-modal')">✕</button>
+        <div class="modal-header">
+            <h2>Chào Mừng Trở Lại</h2>
+            <p>Đăng nhập để tiếp tục học tập</p>
+        </div>
+        <form id="login-form" class="modal-form">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" placeholder="email@example.com" required>
+            </div>
+            <div class="form-group">
+                <label>Mật Khẩu</label>
+                <div class="input-password-wrap">
+                    <input type="password" name="password" id="login-password" placeholder="••••••••" required>
+                    <button type="button" class="toggle-pw-btn" onclick="togglePassword('login-password', this)" aria-label="Hiện/ẩn mật khẩu">
+                        <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <svg class="eye-off-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="form-footer">
+                <a href="/quen-mat-khau">Quên mật khẩu?</a>
+            </div>
+            <div id="login-msg" class="form-message"></div>
+            <button type="submit" class="btn-primary full-width">Đăng Nhập</button>
+        </form>
+        <p class="modal-switch">Chưa có tài khoản? <a href="#" onclick="switchModal('login-modal','register-modal')">Đăng ký ngay</a></p>
+    </div>
+</div>
+
+<!-- ── MODAL ĐĂNG KÝ ── -->
+<div class="modal-overlay" id="register-modal" onclick="closeModalOverlay(event, 'register-modal')">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal('register-modal')">✕</button>
+        <div class="modal-header">
+            <h2>Tạo Tài Khoản</h2>
+            <p>Tham gia cùng hàng nghìn học viên</p>
+        </div>
+        <form id="register-form" class="modal-form">
+            <div class="form-group">
+                <label>Họ và Tên</label>
+                <input type="text" name="name" placeholder="Nguyễn Văn A" required>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" placeholder="email@example.com" required>
+            </div>
+            <div class="form-group">
+                <label>Mật Khẩu</label>
+                <div class="input-password-wrap">
+                    <input type="password" name="password" id="register-password" placeholder="Tối thiểu 6 ký tự" required minlength="6">
+                    <button type="button" class="toggle-pw-btn" onclick="togglePassword('register-password', this)" aria-label="Hiện/ẩn mật khẩu">
+                        <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <svg class="eye-off-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div id="register-msg" class="form-message"></div>
+            <button type="submit" class="btn-primary full-width">Đăng Ký Miễn Phí</button>
+        </form>
+        <p class="modal-switch">Đã có tài khoản? <a href="#" onclick="switchModal('register-modal','login-modal')">Đăng nhập</a></p>
+    </div>
+</div>
+
+<script src="/js/main.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

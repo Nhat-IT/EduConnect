@@ -1,0 +1,574 @@
+{% extends "layout.html" %}
+{% block title %}Tài Khoản Của Tôi – EduConnect{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="/css/tai-khoan-cua-toi.css">
+{% endblock %}
+
+{% block content %}
+<div class="profile-hero">
+  <div class="container profile-hero-inner">
+    <div class="profile-avatar-wrap">
+      <div class="profile-avatar-big">{{ user.name[0] }}</div>
+    </div>
+    <div class="profile-hero-info">
+      <h1>{{ user.name }}</h1>
+      <p>{{ user.email }}</p>
+      <div class="profile-badges">
+        <span class="badge-profile">🎓 Thành Viên</span>
+        <span class="badge-profile">📅 {{ user.created_at | date if user.created_at else '2024' }}</span>
+        <span class="badge-profile">📚 {{ enrolled_courses|length }} khóa đang học</span>
+        <span class="badge-profile">🏫 {{ created_courses|length }} khóa đã tạo</span>
+      </div>
+    </div>
+    <div class="wallet-hero-box">
+      <div class="wallet-hero-label">💰 Số dư ví</div>
+      <div class="wallet-hero-amount">{{ user.wallet_balance | numfmt }}₫</div>
+      <button class="btn-wallet-hero" onclick="openDepositModal()">Quản Lý Ví →</button>
+    </div>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container profile-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="profile-sidebar">
+      <div class="profile-nav-mobile-trigger" id="pnav-trigger" onclick="togglePnavMobile()">
+        <span id="pnav-trigger-label">📚 Khóa Học Của Tôi</span>
+        <span class="trigger-arrow">▼</span>
+      </div>
+      <nav class="profile-nav" id="profile-nav">
+        <a href="#courses" class="pnav-link active" data-tab="courses">
+          <span>📚</span> Khóa Học Của Tôi
+        </a>
+        <a href="#my-courses" class="pnav-link" data-tab="my-courses">
+          <span>🏫</span> Khóa Học Tôi Tạo
+        </a>
+        <a href="#wallet" class="pnav-link" data-tab="wallet">
+          <span>💳</span> Ví Của Tôi
+        </a>
+        <a href="#profile" class="pnav-link" data-tab="profile">
+          <span>👤</span> Thông Tin Cá Nhân
+        </a>
+        <a href="#security" class="pnav-link" data-tab="security">
+          <span>🔐</span> Bảo Mật
+        </a>
+        <a href="/logout" class="pnav-link pnav-logout">
+          <span>🚪</span> Đăng Xuất
+        </a>
+      </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="profile-main">
+
+      <!-- Tab: Enrolled Courses -->
+      <div class="tab-panel active" id="tab-courses">
+        <div class="panel-header">
+          <h2>Khóa Học Đang Học</h2>
+          <a href="/khoa-hoc" class="btn-primary-sm">+ Tìm Khóa Học</a>
+        </div>
+
+        {% if enrolled_courses %}
+        <div class="enrolled-list">
+          {% for course in enrolled_courses %}
+          <div class="enrolled-card">
+            <div class="enrolled-icon">
+              {{ ['📚','💻','📈','🎨','🚀','💡'][loop.index0 % 6] }}
+            </div>
+            <div class="enrolled-body">
+              <h3 class="enrolled-title">{{ course.title }}</h3>
+              <p class="enrolled-meta">👨‍🏫 {{ course.instructor_name }} • 🎬 {{ course.total_lessons }} bài học</p>
+              <div class="progress-wrap">
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: {{ course.progress }}%"></div>
+                </div>
+                <span class="progress-label">{{ course.progress }}%</span>
+              </div>
+            </div>
+            <div class="enrolled-actions">
+              <div class="enrolled-status {% if course.progress == 100 %}status-done{% elif course.progress > 0 %}status-learning{% else %}status-new{% endif %}">
+                {% if course.progress == 100 %}✅ Hoàn thành
+                {% elif course.progress > 0 %}▶️ Đang học
+                {% else %}🆕 Chưa bắt đầu{% endif %}
+              </div>
+              {% if course.first_lesson_id %}
+              <a href="/xem-bai-hoc/{{ course.first_lesson_id }}" class="btn-continue">
+                {% if course.progress == 100 %}Ôn Tập{% else %}Tiếp Tục Học{% endif %}
+              </a>
+              {% else %}
+              <span class="btn-continue btn-continue--disabled" title="Khóa học chưa có bài học">
+                Chưa có bài học
+              </span>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-courses">
+          <div class="empty-icon">📭</div>
+          <h3>Bạn chưa đăng ký khóa học nào</h3>
+          <p>Hãy khám phá các khóa học chất lượng cao của EduConnect!</p>
+          <a href="/khoa-hoc" class="btn-primary">Khám Phá Khóa Học →</a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Tab: Created Courses -->
+      <div class="tab-panel" id="tab-my-courses">
+        <div class="panel-header">
+          <h2>Khóa Học Tôi Tạo</h2>
+          <button class="btn-primary-sm" onclick="openCreateModal()">+ Tạo Khóa Học Mới</button>
+        </div>
+
+        {% if created_courses %}
+        <div class="created-courses-list">
+          {% for c in created_courses %}
+          <div class="created-course-card">
+            <div class="cc-icon">
+              {% if c.image %}
+              <img src="{{ c.image }}" alt="{{ c.title }}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">
+              {% else %}
+              {{ ['📚','💻','📈','🎨','🚀','💡'][loop.index0 % 6] }}
+              {% endif %}
+            </div>
+            <div class="cc-body">
+              <h3>{{ c.title }}</h3>
+              <div class="cc-meta">
+                <span>📂 {{ c.category_name or 'Chưa phân loại' }}</span>
+                <span>👥 {{ c.student_count }} học viên</span>
+                <span>💰 {{ c.price | numfmt }}₫</span>
+                <span class="cc-level badge-{{ c.level }}">{% if c.level == 'beginner' %}Cơ bản{% elif c.level == 'intermediate' %}Trung cấp{% elif c.level == 'advanced' %}Nâng cao{% endif %}</span>
+              </div>
+            </div>
+            <div class="cc-actions">
+              <a href="/chinh-sua-khoa-hoc/{{ c.id }}" class="btn-primary-sm">✏️ Chỉnh sửa</a>
+              <button class="btn-danger-sm" onclick="deleteCreatedCourse({{ c.id }}, '{{ c.title }}')">🗑 Xóa</button>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-courses">
+          <div class="empty-icon">🏫</div>
+          <h3>Bạn chưa tạo khóa học nào</h3>
+          <p>Chia sẻ kiến thức của bạn với hàng nghìn học viên!</p>
+          <button class="btn-primary" onclick="openCreateModal()">Tạo Khóa Học Đầu Tiên →</button>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Tab: Wallet -->
+      <div class="tab-panel" id="tab-wallet">
+        <div class="panel-header">
+          <h2>Ví Của Tôi</h2>
+        </div>
+
+        <!-- Balance Card -->
+        <div class="wallet-balance-card">
+          <div class="wallet-balance-left">
+            <div class="wallet-icon-big">💳</div>
+            <div>
+              <div class="wallet-balance-label">Số dư hiện tại</div>
+              <div class="wallet-balance-amount" id="wallet-balance-display">{{ user.wallet_balance | numfmt }}₫</div>
+            </div>
+          </div>
+          <div class="wallet-actions-group">
+            <button class="wallet-btn wallet-btn-deposit" onclick="openDepositModal()">
+              ⬇️ Nạp Tiền
+            </button>
+            <button class="wallet-btn wallet-btn-withdraw" onclick="openWithdrawModal()">
+              ⬆️ Rút Tiền
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick deposit amounts -->
+        <div class="wallet-quick-section">
+          <h4>Nạp nhanh</h4>
+          <div class="wallet-quick-btns">
+            <button class="quick-amount-btn" onclick="openDepositModal(100000)">100.000₫</button>
+            <button class="quick-amount-btn" onclick="openDepositModal(200000)">200.000₫</button>
+            <button class="quick-amount-btn" onclick="openDepositModal(500000)">500.000₫</button>
+            <button class="quick-amount-btn" onclick="openDepositModal(1000000)">1.000.000₫</button>
+            <button class="quick-amount-btn featured" onclick="openDepositModal(2000000)">2.000.000₫ 🔥</button>
+          </div>
+        </div>
+
+        <!-- Transaction History -->
+        <div class="txn-section">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <h4 style="margin-bottom:0;">Lịch Sử Giao Dịch</h4>
+            {% if wallet_txns %}
+            <button class="btn-danger-sm" onclick="clearTxnHistory()" id="clear-txn-btn">🗑 Xóa lịch sử</button>
+            {% endif %}
+          </div>
+          {% if wallet_txns %}
+          <div class="txn-list">
+            {% for txn in wallet_txns %}
+            <div class="txn-item">
+              <div class="txn-icon {% if txn.type == 'deposit' %}txn-in{% elif txn.type == 'withdraw' %}txn-out{% else %}txn-buy{% endif %}">
+                {% if txn.type == 'deposit' %}⬇️
+                {% elif txn.type == 'withdraw' %}⬆️
+                {% elif txn.type == 'purchase' %}🛒
+                {% else %}↩️{% endif %}
+              </div>
+              <div class="txn-body">
+                <div class="txn-desc">{{ txn.description }}</div>
+                <div class="txn-date">{{ txn.created_at | date }}</div>
+              </div>
+              <div class="txn-amount {% if txn.type == 'deposit' or txn.type == 'refund' %}txn-amount-in{% else %}txn-amount-out{% endif %}">
+                {% if txn.type == 'deposit' or txn.type == 'refund' %}+{% else %}-{% endif %}{{ txn.amount | numfmt }}₫
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="empty-courses" style="padding:40px 0;">
+            <div class="empty-icon">💸</div>
+            <h3>Chưa có giao dịch nào</h3>
+            <p>Nạp tiền để bắt đầu mua khóa học!</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Tab: Profile -->
+      <div class="tab-panel" id="tab-profile">
+        <div class="panel-header">
+          <h2>Thông Tin Cá Nhân</h2>
+        </div>
+        <div class="profile-form-card">
+          <div style="display:flex;align-items:flex-start;gap:10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.88rem;color:#1e40af;line-height:1.6;">
+            <span style="font-size:1.1rem;">ℹ️</span>
+            <span>Tên hiển thị phải là duy nhất. Email và ngày tham gia không thể thay đổi — nếu cần hỗ trợ vui lòng <a href="/lien-he" style="font-weight:700;color:var(--brand-600);text-decoration:underline;">liên hệ Admin</a>.</span>
+          </div>
+          <form id="profile-form">
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Họ và Tên</label>
+                <input type="text" name="name" id="profile-name" value="{{ user.name }}" placeholder="Nhập tên hiển thị..." maxlength="60" required>
+              </div>
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" value="{{ user.email }}" disabled style="background:var(--neutral-50);cursor:not-allowed;">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Ngày Tham Gia</label>
+              <input type="text" value="{{ user.created_at | date if user.created_at else 'N/A' }}" disabled style="background:var(--neutral-50);cursor:not-allowed;">
+            </div>
+            <div id="profile-msg" class="form-message"></div>
+            <button type="submit" class="btn-primary">💾 Lưu Tên</button>
+          </form>
+        </div>
+
+        <!-- Bank Info Section -->
+        <div class="panel-header" style="margin-top:32px;">
+          <h2>🏦 Thông Tin Ngân Hàng</h2>
+        </div>
+        <div class="profile-form-card">
+          <p style="color:var(--neutral-500);font-size:0.88rem;margin-bottom:16px;">
+            Thông tin này dùng để admin chuyển khoản khi bạn yêu cầu rút tiền từ ví. Lưu ý: hãy điền chính xác để tránh sai sót khi rút tiền, và đảm bảo tài khoản ngân hàng đứng tên bạn. Nếu có thay đổi, vui lòng cập nhật ngay tại đây hoặc liên hệ admin để được hỗ trợ.
+          </p>
+          <form id="bank-form" class="form-card">
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Tên Ngân Hàng</label>
+                <input type="text" name="bank_name" id="bank_name" placeholder="Ví dụ: Vietcombank, Techcombank..." value="{{ user.bank_name if user.bank_name else '' }}">
+              </div>
+              <div class="form-group">
+                <label>Số Tài Khoản</label>
+                <input type="text" name="bank_account" id="bank_account" placeholder="Số tài khoản ngân hàng" value="{{ user.bank_account if user.bank_account else '' }}">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Chủ Tài Khoản</label>
+              <input type="text" name="bank_holder" id="bank_holder" placeholder="Họ tên chủ tài khoản (viết hoa)" value="{{ user.bank_holder if user.bank_holder else '' }}">
+            </div>
+            <div id="bank-msg" class="form-message"></div>
+            <button type="submit" class="btn-primary">💾 Lưu Thông Tin Ngân Hàng</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Tab: Security -->
+      <div class="tab-panel" id="tab-security">
+        <div class="panel-header">
+          <h2>Bảo Mật Tài Khoản</h2>
+        </div>
+        <div class="security-cards">
+          <div class="security-item">
+            <div class="security-icon">🔑</div>
+            <div class="security-body">
+              <h4>Mật Khẩu</h4>
+              <p>Bảo vệ tài khoản bằng mật khẩu mạnh</p>
+            </div>
+            <button class="btn-outline-sm" onclick="openModal('change-password-modal')">Đổi Mật Khẩu</button>
+          </div>
+          <div class="security-item">
+            <div class="security-icon">📧</div>
+            <div class="security-body">
+              <h4>Email Đăng Ký</h4>
+              <p>{{ user.email }}</p>
+            </div>
+            <span class="verified-badge">✓ Đã xác nhận</span>
+          </div>
+          <div class="security-item danger">
+            <div class="security-icon">⚠️</div>
+            <div class="security-body">
+              <h4>Xóa Tài Khoản</h4>
+              <p>Hành động này không thể hoàn tác</p>
+            </div>
+            <button class="btn-danger" onclick="openDeleteAccountModal()">Xóa Tài Khoản</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Modal Nạp Tiền (QR) -->
+<div class="modal-overlay" id="deposit-modal" onclick="closeModalOverlay(event,'deposit-modal')">
+  <div class="modal-box" style="max-width:480px;max-height:90vh;overflow-y:auto;">
+    <button class="modal-close" onclick="closeModal('deposit-modal')">✕</button>
+    <div class="modal-header">
+      <h2>⬇️ Nạp Tiền Vào Ví</h2>
+      <p>Nhập số tiền rồi quét mã QR để chuyển khoản</p>
+    </div>
+    <div class="modal-form">
+      <!-- Bước 1: nhập số tiền -->
+      <div id="deposit-step-1">
+        <div class="form-group">
+          <label>Số Tiền (VNĐ)</label>
+          <input type="number" id="deposit-amount" placeholder="Ví dụ: 500000" min="10000" step="1000">
+          <small style="color:var(--neutral-500);font-size:0.8rem;">Tối thiểu 10.000₫ · Tối đa 50.000.000₫</small>
+        </div>
+        <!-- Nạp nhanh inline -->
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+          <button type="button" class="quick-amount-btn" onclick="setDepositAmount(100000)">100K</button>
+          <button type="button" class="quick-amount-btn" onclick="setDepositAmount(200000)">200K</button>
+          <button type="button" class="quick-amount-btn" onclick="setDepositAmount(500000)">500K</button>
+          <button type="button" class="quick-amount-btn" onclick="setDepositAmount(1000000)">1M</button>
+          <button type="button" class="quick-amount-btn featured" onclick="setDepositAmount(2000000)">2M 🔥</button>
+        </div>
+        <div id="deposit-step1-msg" class="form-message"></div>
+        <button type="button" class="btn-primary full-width" onclick="showDepositQR()">Tạo Mã QR →</button>
+      </div>
+
+      <!-- Bước 2: hiện QR -->
+      <div id="deposit-step-2" style="display:none;">
+        <div style="text-align:center;margin-bottom:16px;">
+          <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:12px;padding:12px 16px;font-size:0.9rem;color:#166534;margin-bottom:16px;">
+            💚 Chuyển khoản đúng nội dung, admin sẽ xác nhận và cộng tiền vào ví trong 24h
+          </div>
+          <img id="deposit-qr-img" src="" alt="QR Code" style="width:200px;height:200px;border-radius:12px;border:3px solid var(--brand-200);margin-bottom:12px;">
+          <div style="font-size:1.4rem;font-weight:800;color:var(--brand-600);" id="deposit-qr-amount"></div>
+        </div>
+        <div style="background:var(--neutral-50);border-radius:10px;padding:14px;font-size:0.85rem;line-height:2;">
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--neutral-500);">Ngân hàng</span><strong>Vietinbank</strong></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--neutral-500);">Số TK</span><strong>0372475346</strong></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--neutral-500);">Chủ TK</span><strong>BUI HUU PHUOC</strong></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="color:var(--neutral-500);">Nội dung</span>
+            <span style="display:flex;align-items:center;gap:6px;">
+              <strong id="deposit-qr-ref" style="color:var(--brand-600);"></strong>
+              <button type="button" onclick="copyDepositRef()" style="background:var(--brand-100);color:var(--brand-700);border:none;padding:2px 8px;border-radius:4px;font-size:0.75rem;cursor:pointer;">Copy</button>
+            </span>
+          </div>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:10px;">
+          <button type="button" class="btn-outline-sm" style="flex:1;padding:10px;" onclick="backToDepositStep1()">← Sửa số tiền</button>
+          <button type="button" class="btn-primary" style="flex:1;padding:10px;" onclick="confirmDepositDone()">✅ Đã chuyển khoản</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Rút Tiền (phí 10%) -->
+<div class="modal-overlay" id="withdraw-modal" onclick="closeModalOverlay(event,'withdraw-modal')">
+  <div class="modal-box" style="max-width:460px;">
+    <button class="modal-close" onclick="closeModal('withdraw-modal')">✕</button>
+    <div class="modal-header">
+      <h2>⬆️ Rút Tiền Về Tài Khoản</h2>
+      <p>Tiền sẽ về ngân hàng trong 1–3 ngày làm việc</p>
+    </div>
+    <div class="modal-form">
+      <div style="background:#fef9c3;border:1px solid #fde047;border-radius:10px;padding:12px 14px;font-size:0.85rem;color:#713f12;margin-bottom:16px;line-height:1.6;">
+        ⚠️ <strong>Phí rút tiền: 10%</strong> trên số tiền yêu cầu rút.<br>
+        Số dư khả dụng: <strong id="withdraw-balance-display" style="color:var(--brand-600);">--</strong>
+      </div>
+      <div class="form-group">
+        <label>Số Tiền Muốn Rút (VNĐ)</label>
+        <input type="number" id="withdraw-amount" placeholder="Tối thiểu 100.000₫" min="100000" step="1000" oninput="calcWithdrawFee()">
+        <small style="color:var(--neutral-500);font-size:0.8rem;">Tối thiểu 100.000₫</small>
+      </div>
+
+      <!-- Fee breakdown -->
+      <div id="withdraw-fee-box" style="display:none;background:var(--neutral-50);border-radius:10px;padding:14px;font-size:0.88rem;line-height:2.2;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--neutral-500);">Số tiền yêu cầu</span>
+          <span id="fee-requested" style="font-weight:600;"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--neutral-500);">Phí dịch vụ (10%)</span>
+          <span id="fee-charge" style="color:#ef4444;font-weight:600;"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;border-top:1px solid var(--neutral-200);padding-top:6px;margin-top:4px;">
+          <span style="font-weight:700;">Nhận thực tế</span>
+          <span id="fee-receive" style="font-weight:800;color:#16a34a;font-size:1.05rem;"></span>
+        </div>
+      </div>
+
+      <div id="withdraw-msg" class="form-message"></div>
+      <button type="button" class="btn-primary full-width" id="withdraw-submit-btn" onclick="submitWithdraw()">⬆️ Xác Nhận Rút Tiền</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Tạo Khóa Học -->
+<div class="modal-overlay" id="create-course-modal" onclick="closeModalOverlay(event,'create-course-modal')">
+  <div class="modal-box" style="max-width:480px;max-height:90vh;overflow-y:auto;">
+    <button class="modal-close" onclick="closeModal('create-course-modal')">✕</button>
+    <div class="modal-header">
+      <h2>Tạo Khóa Học Mới</h2>
+      <p>Chia sẻ kiến thức của bạn với cộng đồng EduConnect</p>
+    </div>
+    <form id="create-course-form" class="modal-form" enctype="multipart/form-data">
+      <div class="form-group">
+        <label>Tên Khóa Học *</label>
+        <input type="text" name="title" placeholder="Ví dụ: Học Python Từ Cơ Bản Đến Nâng Cao" required>
+      </div>
+      <div class="form-group">
+        <label>Ảnh Bìa Khóa Học</label>
+        <div class="thumbnail-upload-wrap" id="create-thumb-wrap">
+          <img id="create-thumb-preview" src="" alt="" style="display:none;width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:8px;">
+          <input type="file" name="thumbnail_file" id="create-thumb-file" accept="image/*" style="display:none" onchange="previewThumb(this,'create-thumb-preview')">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button type="button" class="btn-outline-sm" onclick="document.getElementById('create-thumb-file').click()">📷 Chọn ảnh</button>
+            <span style="color:var(--text-muted);font-size:13px;">hoặc dán URL:</span>
+            <input type="text" name="thumbnail" placeholder="https://..." style="flex:1;min-width:0;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;">
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Nếu không chọn ảnh sẽ hiển thị ảnh mặc định. Tối đa 5MB.</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Mô Tả</label>
+        <textarea name="description" rows="3" placeholder="Mô tả ngắn về khóa học, nội dung sẽ học được..."></textarea>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Danh Mục</label>
+          <select name="category_id">
+            <option value="">-- Chọn danh mục --</option>
+            {% for cat in categories %}
+            <option value="{{ cat.id }}">{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Cấp Độ</label>
+          <select name="level">
+            <option value="beginner">🟢 Cơ bản</option>
+            <option value="intermediate">🟡 Trung cấp</option>
+            <option value="advanced">🔴 Nâng cao</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Học Phí (₫)</label>
+          <input type="number" name="price" placeholder="0 = Miễn phí" min="0" step="1000">
+        </div>
+        <div class="form-group">
+          <label>Giá Gốc (₫)</label>
+          <input type="number" name="original_price" placeholder="Giá trước khi giảm" min="0" step="1000">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Số Bài Học <span style="font-size:0.78rem;color:var(--text-muted);font-weight:400;">(tự động cập nhật khi thêm bài học)</span></label>
+        <input type="number" name="total_lessons" id="create-total-lessons" value="0" min="0" readonly
+               style="background:var(--neutral-100);cursor:not-allowed;color:var(--text-muted);">
+      </div>
+      <div id="create-course-msg" class="form-message"></div>
+      <button type="submit" class="btn-primary full-width">🚀 Tạo Khóa Học</button>
+    </form>
+  </div>
+</div>
+<!-- Modal Đổi Mật Khẩu -->
+<div class="modal-overlay" id="change-password-modal" onclick="closeModalOverlay(event,'change-password-modal')">
+  <div class="modal-box" style="max-width:460px;">
+    <button class="modal-close" onclick="closeModal('change-password-modal')">✕</button>
+    <div class="modal-header">
+      <h2>🔑 Đổi Mật Khẩu</h2>
+      <p>Nhập mật khẩu hiện tại và mật khẩu mới của bạn</p>
+    </div>
+    <form id="change-password-form" class="modal-form">
+      <div class="form-group">
+        <label>Mật Khẩu Hiện Tại</label>
+        <div class="input-password-wrap">
+          <input type="password" name="current_password" id="cp-current" placeholder="Nhập mật khẩu hiện tại" required>
+          <button type="button" class="toggle-pw-btn" onclick="togglePassword('cp-current', this)" aria-label="Hiện/ẩn mật khẩu">
+            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="eye-off-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Mật Khẩu Mới</label>
+        <div class="input-password-wrap">
+          <input type="password" name="new_password" id="cp-new" placeholder="Tối thiểu 6 ký tự" minlength="6" required>
+          <button type="button" class="toggle-pw-btn" onclick="togglePassword('cp-new', this)" aria-label="Hiện/ẩn mật khẩu">
+            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="eye-off-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Xác Nhận Mật Khẩu Mới</label>
+        <div class="input-password-wrap">
+          <input type="password" name="confirm_password" id="cp-confirm" placeholder="Nhập lại mật khẩu mới" minlength="6" required>
+          <button type="button" class="toggle-pw-btn" onclick="togglePassword('cp-confirm', this)" aria-label="Hiện/ẩn mật khẩu">
+            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="eye-off-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="password-msg" class="form-message"></div>
+      <button type="submit" class="btn-primary full-width">🔒 Cập Nhật Mật Khẩu</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Xóa Tài Khoản -->
+<div class="modal-overlay" id="delete-account-modal" onclick="closeModalOverlay(event,'delete-account-modal')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('delete-account-modal')">✕</button>
+    <div class="modal-header">
+      <h2>⚠️ Yêu Cầu Xóa Tài Khoản</h2>
+      <p>Yêu cầu sẽ được gửi đến Admin để xem xét và xử lý</p>
+    </div>
+    <div class="form-card">
+      <div style="background:#fee2e2;border-radius:8px;padding:14px 16px;font-size:0.9rem;color:#991b1b;line-height:1.6;">
+        ⚠️ <strong>Lưu ý:</strong> Sau khi tài khoản bị xóa, toàn bộ dữ liệu (khóa học, ví tiền, lịch sử) sẽ bị mất vĩnh viễn và không thể khôi phục.
+      </div>
+      <div class="form-group">
+        <label>Lý Do Xóa Tài Khoản *</label>
+        <textarea id="delete-reason" rows="4" placeholder="Vui lòng cho chúng tôi biết lý do bạn muốn xóa tài khoản..." style="resize:vertical;"></textarea>
+      </div>
+      <div id="delete-account-msg" class="form-message"></div>
+      <div style="display:flex;gap:12px;">
+        <button class="btn-outline-sm" style="flex:1;padding:12px;" onclick="closeModal('delete-account-modal')">Hủy</button>
+        <button class="btn-danger" style="flex:1;padding:12px;" id="delete-account-btn" onclick="submitDeleteAccount()">Gửi Yêu Cầu Xóa</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/js/tai-khoan-cua-toi.js"></script>
+{% endblock %}

@@ -1,0 +1,189 @@
+{% extends "admin/layout.html" %}
+{% block title %}Yêu Cầu Nạp Tiền{% endblock %}
+{% block page_title %}Yêu Cầu Nạp Tiền{% endblock %}
+
+{% block content %}
+<!-- Filter toolbar -->
+<div class="admin-toolbar">
+  <form method="GET" class="toolbar-search" style="gap:8px;">
+    <select name="status" onchange="this.form.submit()" style="padding:8px 12px;border-radius:8px;border:1px solid var(--a-border);background:var(--a-card);color:var(--a-text);font-size:.88rem;">
+      <option value="" {% if not status_filter %}selected{% endif %}>Tất cả trạng thái</option>
+      <option value="pending"  {% if status_filter=='pending'  %}selected{% endif %}>⏳ Chờ duyệt</option>
+      <option value="approved" {% if status_filter=='approved' %}selected{% endif %}>✓ Đã duyệt</option>
+      <option value="rejected" {% if status_filter=='rejected' %}selected{% endif %}>✕ Từ chối</option>
+    </select>
+    {% if status_filter %}<a href="/admin/deposits" class="clear-search">✕ Xóa lọc</a>{% endif %}
+  </form>
+  <span class="toolbar-info">Tổng: <strong>{{ total }}</strong> yêu cầu</span>
+</div>
+
+<div class="dash-card">
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Học Viên</th>
+          <th>Email</th>
+          <th>Số Tiền</th>
+          <th>Ngân Hàng</th>
+          <th>Nội Dung CK</th>
+          <th>Ngày Gửi</th>
+          <th>Trạng Thái</th>
+          <th>Thao Tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in deposits %}
+        <tr id="row-dep-{{ d.id }}">
+          <td class="td-id">{{ d.id }}</td>
+          <td>
+            <div class="td-user">
+              <div class="td-avatar">{{ d.user_name[0] }}</div>
+              <strong>{{ d.user_name }}</strong>
+            </div>
+          </td>
+          <td class="td-email">{{ d.user_email }}</td>
+          <td style="font-weight:700;color:#16a34a;white-space:nowrap;">
+            +{{ d.amount | numfmt }}₫
+          </td>
+          <td>{{ d.bank_name or '—' }}</td>
+          <td style="font-size:.82rem;max-width:180px;white-space:normal;color:var(--a-text-muted);">
+            {{ d.transfer_content or '—' }}
+          </td>
+          <td class="td-date">{{ d.created_at | date if d.created_at else '—' }}</td>
+          <td>
+            {% if d.status == 'pending' %}
+              <span class="badge-dep badge-dep-pending">⏳ Chờ duyệt</span>
+            {% elif d.status == 'approved' %}
+              <span class="badge-dep badge-dep-done">✓ Đã duyệt</span>
+            {% elif d.status == 'rejected' %}
+              <span class="badge-dep badge-dep-reject">✕ Từ chối</span>
+              {% if d.note %}<br><small style="color:var(--a-text-muted);font-size:.75rem;">{{ d.note }}</small>{% endif %}
+            {% endif %}
+          </td>
+          <td>
+            {% if d.status == 'pending' %}
+            <div class="td-actions" style="gap:6px;">
+              <button class="btn-admin-primary btn-sm" onclick="approveDeposit({{ d.id }}, {{ d.amount }}, '{{ d.user_name|replace("'","\\'") }}')">✓ Duyệt</button>
+              <button class="btn-admin-ghost btn-sm" onclick="rejectDeposit({{ d.id }})">✕ Từ chối</button>
+            </div>
+            {% else %}
+              <span style="color:var(--a-text-muted);font-size:.8rem;">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9" class="td-empty">Không có yêu cầu nạp tiền nào.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if total_pages > 1 %}
+  <div class="admin-pagination">
+    {% if page > 1 %}<a href="?page={{ page-1 }}&status={{ status_filter }}" class="pg-btn">←</a>{% endif %}
+    {% for p in range(1, total_pages+1) %}
+      {% if p == page %}<span class="pg-btn active">{{ p }}</span>
+      {% elif p == 1 or p == total_pages or (p >= page-2 and p <= page+2) %}<a href="?page={{ p }}&status={{ status_filter }}" class="pg-btn">{{ p }}</a>
+      {% elif p == page-3 or p == page+3 %}<span class="pg-btn" style="border:none;pointer-events:none;">…</span>{% endif %}
+    {% endfor %}
+    {% if page < total_pages %}<a href="?page={{ page+1 }}&status={{ status_filter }}" class="pg-btn">→</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- Modal Confirm Approve -->
+<div class="admin-modal-overlay" id="modal-approve-dep" onclick="closeAdminModal(event,'modal-approve-dep')">
+  <div class="admin-modal admin-modal-sm">
+    <div class="am-header">
+      <h2>✅ Xác Nhận Duyệt Nạp Tiền</h2>
+      <button onclick="closeModal('modal-approve-dep')">✕</button>
+    </div>
+    <div class="am-confirm-body">
+      <p>Duyệt và cộng tiền vào tài khoản:</p>
+      <strong id="approve-dep-name" style="font-size:1rem;"></strong>
+      <div style="margin:14px 0;padding:12px;background:rgba(34,197,94,.08);border-radius:8px;text-align:center;">
+        <span style="font-size:1.4rem;font-weight:800;color:#16a34a;" id="approve-dep-amount"></span>
+      </div>
+      <p style="font-size:.85rem;color:var(--a-text-muted);">Xác nhận người dùng đã chuyển khoản thành công trước khi duyệt.</p>
+    </div>
+    <div class="am-footer">
+      <button onclick="closeModal('modal-approve-dep')" class="btn-admin-ghost">Hủy</button>
+      <button id="btn-confirm-approve-dep" class="btn-admin-primary">✓ Duyệt & Cộng Tiền</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Reject -->
+<div class="admin-modal-overlay" id="modal-reject-dep" onclick="closeAdminModal(event,'modal-reject-dep')">
+  <div class="admin-modal admin-modal-sm">
+    <div class="am-header">
+      <h2>✕ Từ Chối Nạp Tiền</h2>
+      <button onclick="closeModal('modal-reject-dep')">✕</button>
+    </div>
+    <div class="am-confirm-body">
+      <div class="am-field" style="margin-top:8px;">
+        <label style="font-size:.85rem;font-weight:600;display:block;margin-bottom:6px;">Lý do từ chối (tuỳ chọn)</label>
+        <input type="text" id="reject-dep-note" placeholder="Vd: Không tìm thấy giao dịch..."
+               style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--a-border);background:var(--a-bg);color:var(--a-text);font-size:.88rem;">
+      </div>
+    </div>
+    <div class="am-footer">
+      <button onclick="closeModal('modal-reject-dep')" class="btn-admin-ghost">Hủy</button>
+      <button id="btn-confirm-reject-dep" class="btn-admin-danger">✕ Từ Chối</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+.badge-dep { display:inline-block; padding:3px 10px; border-radius:20px; font-size:.78rem; font-weight:600; }
+.badge-dep-pending { background:rgba(245,158,11,.15); color:#d97706; }
+.badge-dep-done    { background:rgba(34,197,94,.12); color:#16a34a; }
+.badge-dep-reject  { background:rgba(107,114,128,.12); color:var(--a-text-muted); }
+.btn-sm { padding:5px 12px !important; font-size:.78rem !important; }
+</style>
+<script>
+let approveDepId = null;
+let rejectDepId  = null;
+
+function approveDeposit(id, amount, name) {
+  approveDepId = id;
+  document.getElementById('approve-dep-name').textContent = name;
+  document.getElementById('approve-dep-amount').textContent = '+' + amount.toLocaleString('vi-VN') + '₫';
+  openModal('modal-approve-dep');
+}
+
+document.getElementById('btn-confirm-approve-dep').addEventListener('click', async () => {
+  if (!approveDepId) return;
+  const btn = document.getElementById('btn-confirm-approve-dep');
+  btn.textContent = 'Đang duyệt...'; btn.disabled = true;
+  const res  = await fetch(`/admin/deposits/approve/${approveDepId}`, { method: 'POST' });
+  const data = await res.json();
+  showAdminToast(data.message, data.success ? 'success' : 'error');
+  if (data.success) setTimeout(() => location.reload(), 800);
+  else { btn.textContent = '✓ Duyệt & Cộng Tiền'; btn.disabled = false; }
+});
+
+function rejectDeposit(id) {
+  rejectDepId = id;
+  document.getElementById('reject-dep-note').value = '';
+  openModal('modal-reject-dep');
+}
+
+document.getElementById('btn-confirm-reject-dep').addEventListener('click', async () => {
+  if (!rejectDepId) return;
+  const btn  = document.getElementById('btn-confirm-reject-dep');
+  const note = document.getElementById('reject-dep-note').value;
+  btn.textContent = 'Đang xử lý...'; btn.disabled = true;
+  const fd = new FormData(); fd.append('note', note);
+  const res  = await fetch(`/admin/deposits/reject/${rejectDepId}`, { method: 'POST', body: fd });
+  const data = await res.json();
+  showAdminToast(data.message, data.success ? 'success' : 'error');
+  if (data.success) setTimeout(() => location.reload(), 800);
+  else { btn.textContent = '✕ Từ Chối'; btn.disabled = false; }
+});
+</script>
+{% endblock %}

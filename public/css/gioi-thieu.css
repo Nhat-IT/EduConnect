@@ -1,0 +1,144 @@
+/* ══ GIỚI THIỆU CSS ══ */
+.about-hero {
+  background: linear-gradient(135deg, var(--brand-900), var(--brand-800));
+  color: var(--white);
+  padding: 72px 0;
+}
+.about-hero-inner { display: flex; align-items: center; gap: 60px; }
+.about-hero-content { flex: 1; }
+.about-hero-content .section-label { color: var(--brand-300); background: rgba(72,72,200,0.2); }
+.about-hero-content h1 { color: var(--white); font-size: clamp(2rem, 4vw, 3rem); margin: 12px 0 20px; }
+.about-hero-content p { color: var(--brand-300); font-size: 1.05rem; line-height: 1.7; margin-bottom: 36px; }
+.about-mini-stats { display: flex; gap: 32px; flex-wrap: wrap; }
+.about-stat { text-align: center; }
+.about-stat strong { display: block; font-family: var(--font-display); font-size: 1.8rem; font-weight: 800; color: var(--accent-400); }
+.about-stat span { font-size: 0.82rem; color: var(--brand-300); }
+
+.about-hero-visual {
+  flex-shrink: 0;
+  width: 280px;
+  height: 280px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.about-bg-orb {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(72,72,200,0.3), transparent 70%);
+  border-radius: 50%;
+}
+.about-emoji-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  position: relative;
+  z-index: 1;
+}
+.ae-card {
+  width: 80px; height: 80px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  backdrop-filter: blur(8px);
+  animation: floatAnim 3s ease-in-out infinite;
+}
+.ae-card:nth-child(2) { animation-delay: 0.5s; }
+.ae-card:nth-child(3) { animation-delay: 1s; }
+.ae-card:nth-child(4) { animation-delay: 1.5s; }
+@keyframes floatAnim { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+/* Mission */
+.mission-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 28px; }
+.mission-card {
+  padding: 32px 28px;
+  background: var(--white);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--neutral-200);
+  transition: var(--transition);
+}
+.mission-card:hover { box-shadow: var(--shadow-md); transform: translateY(-4px); }
+.mission-num {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--brand-200);
+  margin-bottom: 16px;
+  line-height: 1;
+}
+.mission-card h3 { font-size: 1.05rem; margin-bottom: 10px; color: var(--neutral-900); }
+.mission-card p { color: var(--neutral-500); font-size: 0.92rem; line-height: 1.7; }
+
+/* Values */
+.values-list { display: flex; flex-direction: column; gap: 20px; max-width: 760px; margin: 0 auto; }
+.value-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 24px 28px;
+  background: var(--neutral-50);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--neutral-200);
+  transition: var(--transition);
+}
+.value-item:hover { border-color: var(--brand-300); background: var(--brand-100); }
+.value-icon { font-size: 1.8rem; flex-shrink: 0; }
+.value-body h3 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; color: var(--neutral-900); }
+.value-body p { font-size: 0.9rem; color: var(--neutral-500); }
+
+/* Instructors */
+.instructors-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 24px; }
+.instructor-card {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: 28px 24px;
+  text-align: center;
+  border: 1px solid var(--neutral-200);
+  transition: var(--transition);
+}
+.instructor-card:hover { box-shadow: var(--shadow-md); transform: translateY(-4px); }
+.ins-avatar {
+  width: 72px; height: 72px;
+  background: var(--brand-500);
+  color: var(--white);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin: 0 auto 16px;
+}
+.ins-name { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+.ins-role { font-size: 0.82rem; color: var(--brand-500); font-weight: 600; margin-bottom: 10px; }
+.ins-bio { font-size: 0.85rem; color: var(--neutral-500); line-height: 1.5; margin-bottom: 16px; }
+.ins-stats { display: flex; justify-content: space-around; }
+.ins-stats div { text-align: center; }
+.ins-stats strong { display: block; font-family: var(--font-display); font-weight: 800; color: var(--neutral-900); }
+.ins-stats span { font-size: 0.72rem; color: var(--neutral-500); }
+
+/* CTA */
+.about-cta {
+  background: linear-gradient(135deg, var(--brand-700), var(--brand-500));
+  color: var(--white);
+  padding: 80px 0;
+}
+.about-cta h2 { font-size: 2.2rem; margin-bottom: 12px; }
+.about-cta p { font-size: 1.05rem; color: rgba(255,255,255,0.8); }
+
+@media (max-width: 1024px) {
+  .instructors-grid { grid-template-columns: repeat(2,1fr); }
+  .mission-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .about-hero-inner { flex-direction: column; text-align: center; }
+  .about-mini-stats { justify-content: center; }
+  .about-hero-visual { display: none; }
+  .instructors-grid { grid-template-columns: 1fr 1fr; }
+}

@@ -1,0 +1,154 @@
+{% extends "admin/layout.html" %}
+{% block title %}Quản Lý Khóa Học{% endblock %}
+{% block page_title %}Quản Lý Khóa Học{% endblock %}
+
+{% block content %}
+<!-- Toolbar -->
+<div class="admin-toolbar">
+  <form method="GET" class="toolbar-search">
+    <input type="text" name="q" value="{{ q }}" placeholder="Tìm tên khóa học...">
+    <button type="submit">🔍</button>
+    {% if q %}<a href="/admin/courses" class="clear-search">✕</a>{% endif %}
+  </form>
+  <span class="toolbar-info">Tổng: <strong>{{ total }}</strong> khóa học</span>
+</div>
+
+<!-- Table -->
+<div class="dash-card">
+  <div class="dash-card-header">
+    <h3>{{ total }} khóa học</h3>
+  </div>
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Tên Khóa Học</th>
+          <th>Danh Mục</th>
+          <th>Giảng Viên</th>
+          <th>Giá</th>
+          <th>HV</th>
+          <th>Cấp Độ</th>
+          <th>Trạng Thái</th>
+          <th>Thao Tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in courses %}
+        <tr id="row-course-{{ c.id }}" {% if c.is_locked %}style="opacity:.6;"{% endif %}>
+          <td class="td-id">{{ c.id }}</td>
+          <td>
+            <div class="td-course-name">
+              <strong>{{ c.title }}</strong>
+              <span>{{ (c.description or '') | truncate(50, false, '') }}{% if c.description and c.description|length > 50 %}...{% endif %}</span>
+            </div>
+          </td>
+          <td><span class="tag-cat">{{ c.category_name or '—' }}</span></td>
+          <td>{{ c.instructor_name or '—' }}</td>
+          <td class="td-price">{{ c.price | numfmt }}₫</td>
+          <td><strong>{{ c.total_students }}</strong></td>
+          <td>
+            <span class="badge-level badge-{{ c.level }}">
+              {% if c.level == 'beginner' %}Cơ bản{% elif c.level == 'intermediate' %}Trung cấp{% elif c.level == 'advanced' %}Nâng cao{% else %}{{ c.level }}{% endif %}
+            </span>
+          </td>
+          <td>
+            {% if c.is_locked %}
+              <span class="badge-locked">🔒 Đã khóa</span>
+            {% else %}
+              <span class="badge-active">✓ Hoạt động</span>
+            {% endif %}
+          </td>
+          <td>
+            <div class="td-actions">
+              <button class="btn-lock {% if c.is_locked %}btn-unlock{% endif %}"
+                      onclick="toggleLock({{ c.id }}, {{ c.is_locked or 0 }})"
+                      title="{{ 'Mở khóa' if c.is_locked else 'Khóa khóa học' }}">
+                {{ '🔓' if c.is_locked else '🔒' }}
+              </button>
+              <button class="btn-delete" onclick="deleteCourse({{ c.id }}, '{{ c.title|replace("'","\\'")|replace('"','') }}')" title="Xóa">🗑️</button>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9" class="td-empty">Không tìm thấy khóa học nào.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if total_pages > 1 %}
+  <div class="admin-pagination">
+    {% if page > 1 %}<a href="?page={{ page-1 }}&q={{ q }}" class="pg-btn">←</a>{% endif %}
+    {% for p in range(1, total_pages+1) %}
+      {% if p == page %}<span class="pg-btn active">{{ p }}</span>
+      {% elif p == 1 or p == total_pages or (p >= page-2 and p <= page+2) %}<a href="?page={{ p }}&q={{ q }}" class="pg-btn">{{ p }}</a>
+      {% elif p == page-3 or p == page+3 %}<span class="pg-btn" style="border:none;pointer-events:none;">…</span>{% endif %}
+    {% endfor %}
+    {% if page < total_pages %}<a href="?page={{ page+1 }}&q={{ q }}" class="pg-btn">→</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- ══ CONFIRM DELETE ══ -->
+<div class="admin-modal-overlay" id="modal-confirm-delete" onclick="closeAdminModal(event,'modal-confirm-delete')">
+  <div class="admin-modal admin-modal-sm">
+    <div class="am-header">
+      <h2>⚠️ Xác Nhận Xóa</h2>
+      <button onclick="closeModal('modal-confirm-delete')">✕</button>
+    </div>
+    <div class="am-confirm-body">
+      <p>Bạn có chắc muốn xóa khóa học:</p>
+      <strong id="delete-course-name"></strong>
+      <p class="am-warning">⚠️ Hành động này sẽ xóa tất cả dữ liệu liên quan và không thể hoàn tác!</p>
+    </div>
+    <div class="am-footer">
+      <button onclick="closeModal('modal-confirm-delete')" class="btn-admin-ghost">Hủy</button>
+      <button id="btn-confirm-delete" class="btn-admin-danger">Xóa Khóa Học</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+.badge-locked { display:inline-block;padding:3px 10px;border-radius:20px;font-size:.78rem;font-weight:600;background:rgba(239,68,68,.12);color:var(--a-danger); }
+.badge-active { display:inline-block;padding:3px 10px;border-radius:20px;font-size:.78rem;font-weight:600;background:rgba(34,197,94,.12);color:#16a34a; }
+.btn-lock  { background:rgba(245,158,11,.12);color:#d97706;border:none;padding:6px 9px;border-radius:6px;cursor:pointer;font-size:1rem;transition:background .2s; }
+.btn-lock:hover  { background:rgba(245,158,11,.25); }
+.btn-unlock { background:rgba(34,197,94,.12);color:#16a34a; }
+.btn-unlock:hover { background:rgba(34,197,94,.25); }
+</style>
+<script>
+// Toggle lock
+async function toggleLock(id, currentLocked) {
+  const newLocked = currentLocked ? 0 : 1;
+  const res  = await fetch(`/admin/courses/lock/${id}`, {
+    method: 'POST',
+    body: new URLSearchParams({ locked: newLocked })
+  });
+  const data = await res.json();
+  showAdminToast(data.message, data.success ? 'success' : 'error');
+  if (data.success) setTimeout(() => location.reload(), 600);
+}
+
+// Delete
+let deleteCourseId = null;
+function deleteCourse(id, name) {
+  deleteCourseId = id;
+  document.getElementById('delete-course-name').textContent = `"${name}"`;
+  openModal('modal-confirm-delete');
+}
+document.getElementById('btn-confirm-delete').addEventListener('click', async () => {
+  if (!deleteCourseId) return;
+  const btn = document.getElementById('btn-confirm-delete');
+  btn.textContent = 'Đang xóa...'; btn.disabled = true;
+  const res  = await fetch(`/admin/courses/delete/${deleteCourseId}`, { method: 'POST' });
+  const data = await res.json();
+  showAdminToast(data.message, data.success ? 'success' : 'error');
+  if (data.success) setTimeout(() => location.reload(), 800);
+  else { btn.textContent = 'Xóa Khóa Học'; btn.disabled = false; }
+});
+</script>
+{% endblock %}

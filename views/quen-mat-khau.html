@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% block title %}Quên Mật Khẩu – EduConnect{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="/css/quen-mat-khau.css">
+{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+  <div class="auth-bg"></div>
+  <div class="container auth-container">
+    <div class="auth-card">
+
+      <!-- Panel gửi yêu cầu -->
+      <div class="step-panel active" id="panel-request">
+        <div class="auth-card-header">
+          <div class="auth-icon">🔐</div>
+          <h2>Quên Mật Khẩu?</h2>
+          <p>Nhập email của bạn — Admin sẽ cấp mật khẩu mới và liên hệ lại với bạn.</p>
+        </div>
+        <form id="form-reset-request" class="form-card">
+          <div class="form-group">
+            <label>Địa Chỉ Email</label>
+            <input type="email" name="email" placeholder="email@example.com" required>
+          </div>
+          <div id="msg-request" class="form-message"></div>
+          <button type="submit" class="btn-primary full-width">Gửi Yêu Cầu →</button>
+        </form>
+        <div class="auth-back">
+          <a href="/">← Quay về trang chủ</a>
+        </div>
+      </div>
+
+      <!-- Panel xác nhận đã gửi -->
+      <div class="step-panel" id="panel-done">
+        <div class="success-panel">
+          <div class="success-icon">📨</div>
+          <h2>Yêu Cầu Đã Gửi!</h2>
+          <p id="done-msg">Admin đã nhận được yêu cầu và sẽ cấp mật khẩu mới sớm nhất có thể.<br>Vui lòng chú ý email hoặc SĐT để nhận mật khẩu tạm thời.</p>
+          <p style="margin-top:14px;font-size:.85rem;color:var(--text-muted);">Sau khi nhận mật khẩu từ Admin, bạn sẽ được yêu cầu <strong>đổi mật khẩu ngay</strong> khi đăng nhập lần đầu.</p>
+          <a href="/" class="btn-primary" style="margin-top:20px;display:inline-block;">← Về Trang Chủ</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/js/quen-mat-khau.js"></script>
+{% endblock %}
